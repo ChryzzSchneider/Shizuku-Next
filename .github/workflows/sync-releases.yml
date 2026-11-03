@@ -1,0 +1,76 @@
+name: Replicar Releases de Upstream
+
+on:
+  schedule:
+    # Se ejecuta cada 6 horas (puedes ajustar la frecuencia)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente desde la pestaña Actions
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comparar versiones y replicar release
+        env:
+          # Repositorio original a monitorear (formato propietario/repo)
+          UPSTREAM_REPO: "rushiranpise/Shizuku-Next"
+          # Token nativo generado por GitHub Actions
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+
+          echo "Consultando el último release en upstream ($UPSTREAM_REPO)..."
+          # Obtener el tag más reciente de upstream
+          UPSTREAM_TAG=$(gh api repos/$UPSTREAM_REPO/releases/latest --jq .tag_name 2>/dev/null || echo "")
+
+          if [ -z "$UPSTREAM_TAG" ]; then
+            echo "No se encontraron releases en el repositorio upstream."
+            exit 0
+          fi
+
+          echo "Último tag en upstream: $UPSTREAM_TAG"
+
+          # Comprobar si ese release ya existe en tu fork
+          MY_TAG=$(gh api repos/${{ github.repository }}/releases/tags/$UPSTREAM_TAG --jq .tag_name 2>/dev/null || echo "")
+
+          if [ "$UPSTREAM_TAG" = "$MY_TAG" ]; then
+            echo "El release $UPSTREAM_TAG ya existe en este fork. Todo al día."
+            exit 0
+          fi
+
+          echo "Nuevo release detectado ($UPSTREAM_TAG). Iniciando sincronización..."
+
+          # Obtener título y notas de la versión original
+          RELEASE_TITLE=$(gh api repos/$UPSTREAM_REPO/releases/latest --jq .name)
+          gh api repos/$UPSTREAM_REPO/releases/latest --jq .body > release_notes.md
+
+          # Si el título viene vacío, usar el mismo nombre del tag
+          if [ -z "$RELEASE_TITLE" ] || [ "$RELEASE_TITLE" = "null" ]; then
+            RELEASE_TITLE="$UPSTREAM_TAG"
+          fi
+
+          # Crear directorio temporal para descargar los binarios
+          mkdir -p assets
+          cd assets
+
+          echo "Descargando binarios adjuntos..."
+          gh release download "$UPSTREAM_TAG" --repo "$UPSTREAM_REPO" --dir . || true
+
+          cd ..
+
+          echo "Publicando release en tu fork..."
+          # Si hay archivos descargados en /assets, se adjuntan todos
+          if [ -n "$(ls -A assets 2>/dev/null)" ]; then
+            gh release create "$UPSTREAM_TAG" assets/* \
+              --title "$RELEASE_TITLE" \
+              --notes-file release_notes.md
+          else
+            gh release create "$UPSTREAM_TAG" \
+              --title "$RELEASE_TITLE" \
+              --notes-file release_notes.md
+          fi
+
+          echo "Release $UPSTREAM_TAG replicado exitosamente con sus binarios."
