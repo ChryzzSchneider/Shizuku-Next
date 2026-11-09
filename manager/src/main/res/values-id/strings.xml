@@ -13,6 +13,7 @@
     <string name="home_wireless_adb_title"><![CDATA[Mulai melalui Debug Nirkabel]]></string>
     <string name="home_wireless_adb_starting_without_wifi">Memulai tanpa jaringan: perangkat diminta mengaktifkan debugging nirkabel berulang kali hingga fitur tersebut menyala stabil. Proses ini bisa memakan waktu hingga dua menit sebelum dimulai atau berhenti mencoba.</string>
     <string name="home_usb_adb_needs_network">Menjalankan lewat USB menggunakan port ADB klasik, dan membukanya kembali membutuhkan jaringan. Hubungkan ke Wi-Fi sekali, atau pilih <b>Mulai tanpa Wi-Fi</b> sebagai metode mulai lalu jalankan lewat debugging nirkabel.</string>
+    <string name="home_usb_adb_needs_computer">A USB start needs the classic ADB port. On this Android version, connect to a computer and start Shizuku with the ADB command in Other methods.</string>
     <string name="home_wireless_adb_summary">Mulai menggunakan debugging nirkabel.</string>
     <string name="home_usb_adb_title"><![CDATA[Mulai lewat debugging USB]]></string>
     <string name="home_usb_adb_summary">Mulai menggunakan debugging USB.</string>
@@ -70,8 +71,11 @@
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
     <string name="dialog_adb_pairing_accessibility_permission">Android blocks this switch for apps installed outside an app store. Allow the ^1 app-op to turn on the accessibility service. The accessibility list shows this as \"Controlled by Restricted Setting\".\n\nOpen App info and select \"Allow restricted settings\" from the menu, or run this on a computer:\n\n^2\n\nEither option works. The switch will work afterwards.</string>
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
+    <string name="dialog_adb_pairing_accessibility_permission_tv">Android blocks this switch for apps installed outside an app store, and on a TV, App info has no \"Allow restricted settings\" option to unblock it. A computer connected to this TV over ADB is needed once: either grant the permission above, which lets Shizuku turn the service on by itself, or unblock the switch with:\n\n^1</string>
     <string name="dialog_adb_pairing_open_app_info">App info</string>
-    <string name="dialog_adb_pairing_accessibility_enable"></string>
     <string name="dialog_adb_pairing_accessibility_navigate">Silakan mulai pemasangan dengan
         melakukan langkah-langkah berikut:\n- Buka \"Opsi Pengembang\"\n- Aktifkan \"Debugging USB\"
         dan \"Debugging Nirkabel\"\n- Ketuk sisi kiri \"Debugging Nirkabel\"\n- Ketuk \"Pasangkan
@@ -262,6 +266,7 @@
     <string name="activities_copy">Salin</string>
     <string name="activities_edit_as_intent">Sunting sesuai maksud</string>
     <string name="activities_copied">Disalin</string>
+    <string name="activities_apps_section">Apps</string>
     <string name="tab_intent_builder">Pembuat Intent</string>
     <string name="intent_builder_note">Buat dan kirim intent. Anda dapat mengatur action, data, type, component, categories, extras, dan flags-nya. Anda juga dapat memuat intent dari URI, seperti intent:#Intent;action=android.intent.action.VIEW;data=https://example.com;end. Ini adalah format yang digunakan oleh Activity Launcher dan sebagian besar alat otomatisasi. Memuat intent dengan cara ini akan mengisi kolom-kolom yang ada, sehingga Anda dapat memeriksa dan menyuntingnya sebelum mengirim.</string>
     <string name="intent_uri">URI Intent</string>
@@ -399,15 +404,71 @@ Tetapi ini bukan bagian API Android, jadi membikin yang lain tidak mempunyainya.
     <string name="log_session_delete">Hapus</string>
     <string name="log_session_deleted">%1$s di hapus</string>
     <string name="log_session_busy">%1$s masih direkam</string>
+    <string name="log_session_running"></string>
+    <string name="permissions_usage_access">Usage access</string>
+    <string name="permissions_usage_access_summary">Lets hiding lists see which app is open. Granted by Shizuku or in Android\'s Usage access settings.</string>
+    <string name="permissions_dump">Read app exit reasons</string>
+    <string name="permissions_dump_summary">Lets hiding lists tell when an app is closed instead of just running in the background. Granted by Shizuku.</string>
+    <string name="home_other_methods">Other start methods</string>
+    <string name="home_hiding_active_note">Shizuku may stop while a hidden app is opened because hiding might turn off the debugging connection. Shizuku starts again when the app is closed.</string>
+    <string name="hiding_vpn_client_none">Not chosen: select the VPN app</string>
+    <string name="hiding_notification_channel">Hiding</string>
+    <string name="hiding_notification_title">Settings are hidden</string>
+    <string name="hiding_notification_text">Tap to restore them.</string>
+    <string name="hiding_notification_idle_title">Hiding is on</string>
+    <string name="hiding_notification_watching">Watching your listed apps.</string>
+    <string name="hiding_notification_paused_title">Hiding is paused</string>
+    <string name="hiding_notification_paused_text">Your settings are restored. Resume hiding them for your listed apps.</string>
+    <string name="hiding_resume">Resume</string>
     <string name="hiding_start_again">Mulai lagi</string>
+    <string name="hiding_notification_stopped_title">Hiding stopped</string>
+    <string name="hiding_notification_stopped_text">Shizuku is not running, so hiding cannot detect which app is open. All hidden settings have been restored.</string>
+    <string name="hiding_carries_session_wireless">Not applied: Shizuku uses wireless debugging, so hiding it would stop Shizuku.</string>
+    <string name="hiding_carries_session_usb">Not applied: Shizuku uses USB debugging, so hiding it would stop Shizuku.</string>
+    <string name="tab_settings">Settings</string>
+    <string name="home_status_transport_label">Transport</string>
+    <string name="home_status_started_with">Current</string>
+    <string name="home_status_started_default">Default</string>
+    <string name="uid_label">UID</string>
+    <string name="uid_name_format">(%1$s)</string>
+    <string name="uid_name_root">root</string>
     <string name="uid_name_system">sistem</string>
+    <string name="uid_name_shell">shell</string>
+    <string name="home_device_manager_version">Manager version</string>
+    <string name="home_device_android_version">Android version</string>
+    <string name="home_device_kernel_version">Kernel version</string>
+    <string name="home_device_model">Device model</string>
+    <string name="home_device_fingerprint">Fingerprint</string>
+    <string name="home_device_selinux">SELinux status</string>
+    <string name="home_device_seccomp">Seccomp status</string>
+    <string name="selinux_enforcing">Enforcing</string>
+    <string name="selinux_permissive">Permissive</string>
+    <string name="selinux_disabled">Disabled</string>
+    <string name="seccomp_disabled">Disabled</string>
+    <string name="seccomp_strict">Strict</string>
+    <string name="seccomp_filter">Filter</string>
+    <string name="status_value_none">-</string>
+    <string name="status_running_short">Running</string>
+    <string name="status_stopped_short">Stopped</string>
     <string name="action_start">Mulai</string>
+    <string name="tools_stealth">Stealth mode</string>
+    <string name="tools_modules">Modules</string>
+    <string name="tab_modules">Modules</string>
+    <string name="modules_catalog">Find modules</string>
+    <string name="catalog_apps_title">More apps</string>
+    <string name="catalog_search">Search apps, topics, languages\u2026</string>
     <string name="catalog_filter_sort">Sort</string>
+    <string name="catalog_filter_category">Category</string>
     <string name="catalog_filter_updated">Updated</string>
     <string name="modules_repo_retry">Ulangi</string>
+    <string name="modules_find_modules">Find modules</string>
+    <string name="modules_settings">Modules</string>
+    <string name="modules_disabled">Disabled</string>
     <string name="modules_sort">Sort</string>
     <string name="modules_action_short">Aksi</string>
     <string name="modules_service_short">Layanan</string>
+    <string name="modules_service_running_short">Running</string>
+    <string name="settings_backup_restore_action">Memulihkan</string>
     <string name="intents_start">Mulai</string>
     <!-- Terminal -->
     <string name="terminal_tutorial_miui">Pengguna telah melaporkan bahwa MIUI merusak Storage
@@ -446,6 +507,13 @@ Tetapi ini bukan bagian API Android, jadi membikin yang lain tidak mempunyainya.
     <string name="settings_black_night_theme">Tema hitam gelap</string>
     <string name="settings_black_night_theme_summary">Gunakan tema hitam gelap jika mode malam
         diaktifkan</string>
+    <string name="permissions_action_settings">Settings</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
+    <string name="setup_action_continue">Lanjutkan</string>
+    <string name="setup_usb_title">Debugging USB</string>
     <string name="settings_help">Membantu</string>
     <string name="settings_report_bug">Laporkan bug</string>
     <!--
@@ -545,18 +613,23 @@ Tetapi ini bukan bagian API Android, jadi membikin yang lain tidak mempunyainya.
     <!-- Manage tab -->
     <string name="manage_search_hint">Search apps</string>
     <string name="manage_filter_all">All</string>
+    <string name="manage_filter_disabled">Disabled</string>
     <string name="manage_filter_hidden">Hidden</string>
     <string name="permissions_action_deny">Tolak</string>
+    <string name="manage_status_disabled">Disabled</string>
     <string name="manage_status_hidden">Hidden</string>
     <!-- One app, and what it may do on the device -->
+    <string name="app_op_mode_default">Default</string>
     <string name="app_op_mode_deny">Tolak</string>
     <string name="app_action_enable">Memungkinkan</string>
+    <string name="app_bucket_default">Default</string>
     <!-- The whole firewall as one switch: the tile in the shade and the widget on the home
          screen. The per-app list is unaffected either way, which is what the off state says. -->
     <string name="firewall_tile_label">Firewall</string>
     <!-- The three answers every switch outside the app can give. Unknown is its own word: a
          state that could not be read is not the same thing as a feature that is off. -->
     <!-- The switches in the shade and on the home screen that are not about one app. -->
+    <string name="lab_switch_hiding">Hiding</string>
     <string name="lab_switch_watchdog">Penjaga</string>
     <!-- The three platform settings themselves, and the hiding switches that are about the same
          three settings. Named apart so a shade with both in it does not ask which is which. -->
@@ -571,8 +644,12 @@ Tetapi ini bukan bagian API Android, jadi membikin yang lain tidak mempunyainya.
     <string name="home_switch_usb">Debugging USB</string>
     <!-- Said after a switch outside the app is tapped, since a tile or a widget gives no other
          answer: the state is on the control, but the control is not where the finger is. -->
+    <string name="app_info_uid">UID</string>
     <string name="app_info_updated">Updated</string>
+    <string name="accessibility_boot">Mulai saat boot</string>
+    <string name="accessibility_notification_channel">Layanan aksesibilitas</string>
     <string name="files_root_app_data">Data</string>
     <string name="files_sort">Sort</string>
     <string name="install_location_auto">Pilihan pengembang</string>
+    <string name="install_source_shell">Shell</string>
 </resources>

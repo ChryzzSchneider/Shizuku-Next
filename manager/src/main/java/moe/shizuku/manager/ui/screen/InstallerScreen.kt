@@ -1,9 +1,12 @@
 package moe.shizuku.manager.ui.screen
 
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.OpenableColumns
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -99,6 +102,15 @@ private val Users = listOf(
     "all" to R.string.install_user_all
 )
 
+/** Common packages Android can be told installed an app. */
+private val InstallSources: List<Pair<Int, String?>> = listOf(
+    R.string.install_source_none to null,
+    R.string.install_source_play_store to "com.android.vending",
+    R.string.install_source_shell to "com.android.shell",
+    R.string.install_source_google_package_installer to "com.google.android.packageinstaller",
+    R.string.install_source_aosp_package_installer to "com.android.packageinstaller"
+)
+
 /**
  * Installing a package with the flags a terminal would need a cable for.
  *
@@ -125,6 +137,7 @@ fun InstallerScreen(path: String?, bottomPadding: Dp, onBack: () -> Unit) {
     // thing somebody does - and goes when the screen does.
     var staged by remember { mutableStateOf<String?>(null) }
     var options by remember { mutableStateOf(AppInstall.Options()) }
+    var sourceMenu by remember { mutableStateOf(false) }
     // The options as they were when the install was started, not as they are now: a switch moved
     // while the result is on screen must not rewrite what that install was told to do.
     var lastOptions by remember { mutableStateOf<AppInstall.Options?>(null) }
@@ -138,6 +151,15 @@ fun InstallerScreen(path: String?, bottomPadding: Dp, onBack: () -> Unit) {
     var installed by remember { mutableStateOf<PackageInspect.Installed?>(null) }
     var reading by remember { mutableStateOf(false) }
     var unreadable by remember { mutableStateOf(false) }
+
+    // Only a finished install has something to open, and only a package with a launcher can be
+    // opened. Resolved again once the details arrive, since a successful install and the package
+    // name the screen read from the file are not guaranteed to become state in the same order.
+    val openIntent = remember(result, details) {
+        (result as? AppInstall.Outcome.Done)?.let {
+            details?.packageName?.let { packageName -> launcherIntent(context, packageName) }
+        }
+    }
 
     LaunchedEffect(target) {
         val file = target
@@ -361,18 +383,42 @@ fun InstallerScreen(path: String?, bottomPadding: Dp, onBack: () -> Unit) {
             item {
                 SegmentedCard {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        OutlinedTextField(
-                            value = options.installerPackage.orEmpty(),
-                            onValueChange = { entered ->
-                                options = options.copy(installerPackage = entered.ifBlank { null })
-                            },
-                            label = { Text(stringResource(R.string.install_spoof_source)) },
-                            supportingText = {
-                                Text(stringResource(R.string.install_spoof_source_desc))
-                            },
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth().televisionTextInput(OutlinedTextFieldDefaults.shape)
-                        )
+                        Box(modifier = Modifier.fillMaxWidth()) {
+                            OutlinedTextField(
+                                value = options.installerPackage.orEmpty(),
+                                onValueChange = { entered ->
+                                    options = options.copy(installerPackage = entered.ifBlank { null })
+                                },
+                                label = { Text(stringResource(R.string.install_spoof_source)) },
+                                supportingText = {
+                                    Text(stringResource(R.string.install_spoof_source_desc))
+                                },
+                                trailingIcon = {
+                                    IconButton(onClick = { sourceMenu = true }) {
+                                        Icon(
+                                            Icons.Outlined.KeyboardArrowDown,
+                                            contentDescription = stringResource(R.string.install_source_presets)
+                                        )
+                                    }
+                                },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth().televisionTextInput(OutlinedTextFieldDefaults.shape)
+                            )
+                            DropdownMenu(
+                                expanded = sourceMenu,
+                                onDismissRequest = { sourceMenu = false }
+                            ) {
+                                InstallSources.forEach { (label, packageName) ->
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(label)) },
+                                        onClick = {
+                                            options = options.copy(installerPackage = packageName)
+                                            sourceMenu = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
 
                         // Sits under the spoofed source because it is the same claim from the other
                         // end: which package the app is told installed it, and which URI it is
@@ -435,6 +481,24 @@ fun InstallerScreen(path: String?, bottomPadding: Dp, onBack: () -> Unit) {
                                             MaterialTheme.colorScheme.error
                                     }
                                 )
+
+                                if (openIntent != null) {
+                                    PillButton(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(top = 12.dp),
+                                        onClick = {
+                                            runCatching { context.startActivity(openIntent) }
+                                                .onFailure {
+                                                    Toast.makeText(
+                                                        context,
+                                                        R.string.install_open_failed,
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                        }
+                                    ) { Text(stringResource(R.string.install_open)) }
+                                }
 
                                 // The options the install was given, as rows: what each one
                                 // became, and - where it became nothing - that it is not on this
@@ -865,6 +929,33 @@ private fun detail(output: String): String = output.lineSequence()
     .filterNot { it.startsWith("Success") || it.startsWith("Failure") }
     .filter { it.isNotEmpty() }
     .joinToString("\n")
+
+/**
+ * The intent that opens [packageName], including apps that only put a launcher on Android TV.
+ *
+ * [android.content.pm.PackageManager.getLaunchIntentForPackage] only looks for
+ * [Intent.CATEGORY_LAUNCHER], while a TV app may declare only
+ * [Intent.CATEGORY_LEANBACK_LAUNCHER]. The manifest already asks to see both.
+ */
+private fun launcherIntent(context: Context, packageName: String): Intent? = runCatching {
+    context.packageManager.getLaunchIntentForPackage(packageName)
+        ?: context.packageManager.queryIntentActivities(
+            Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+                .setPackage(packageName),
+            0
+        ).firstOrNull()?.let { activity ->
+            Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+                .setComponent(
+                    ComponentName(
+                        activity.activityInfo.packageName,
+                        activity.activityInfo.name
+                    )
+                )
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+}.getOrNull()
 
 /**
  * Puts a picked file where the shell can read it.

@@ -33,6 +33,9 @@
          row means, and both ways to open it. The App info menu is the only one available on a
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
     <string name="dialog_adb_pairing_open_app_info">Информация о приложении</string>
     <string name="dialog_adb_pairing_accessibility_navigate">Чтобы начать сопряжение, выполните следующие действия:\n- Откройте «Параметры разработчика»\n- Включите «Отладку по USB» и «Беспроводную отладку»\n- Нажмите левую часть пункта «Беспроводная отладка»\n- Нажмите «Сопрячь устройство с кодом сопряжения». Shizuku автоматически обнаружит код сопряжения.</string>
     <string name="adb_pairing_requires_multi_window">Сначала включите режим разделённого экрана.</string>
@@ -104,6 +107,8 @@
     <string name="power_confirm_title">Вы уверены?</string>
     <string name="activities_detail_package">Пакет</string>
     <string name="activities_copy">Копировать</string>
+    <string name="activities_apps_section">Приложения</string>
+    <string name="activities_save">Сохранить</string>
     <string name="intent_package">Пакет</string>
     <string name="intent_start">Запустить</string>
     <string name="device_battery">Батарея</string>
@@ -299,6 +304,11 @@
     <string name="permissions_accessibility">Служба специальных возможностей</string>
     <string name="permissions_accessibility_summary">Автоматически считывает код сопряжения.</string>
     <string name="permissions_battery_summary">Не позволяет Android завершать работу Shizuku в фоновом режиме.</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
+    <string name="setup_wireless_title">Беспроводная отладка</string>
     <string name="settings_help">Помощь</string>
     <string name="settings_report_bug">Сообщить об ошибке</string>
     <!--
@@ -582,6 +592,8 @@
     <string name="app_info_launcher">Запись в лаунчере</string>
     <string name="app_info_yes">Да</string>
     <string name="app_info_no">Нет</string>
+    <string name="accessibility_boot">Запускать при загрузке</string>
+    <string name="accessibility_filter_off">Выключено</string>
     <string name="wifi_passwords_connect">Подключиться</string>
     <string name="files_root_system">Система</string>
     <string name="files_sort">Сортировка</string>
@@ -595,4 +607,5 @@
     <string name="install_details_target">Целевой SDK</string>
     <string name="install_details_installed">Установлено</string>
     <string name="install_location_auto">Автоматически</string>
+    <string name="install_source_shell">Оболочка</string>
 </resources>

@@ -3,6 +3,9 @@ package moe.shizuku.manager.ui.screen
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
@@ -23,6 +26,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.AdminPanelSettings
 import androidx.compose.material.icons.outlined.Bolt
@@ -37,6 +41,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.Link
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.MonitorHeart
 import androidx.compose.material.icons.outlined.NetworkCheck
@@ -44,18 +49,23 @@ import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.PowerSettingsNew
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Restore
 import androidx.compose.material.icons.outlined.RocketLaunch
+import androidx.compose.material.icons.outlined.SaveAlt
 import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.Terminal
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Usb
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VerifiedUser
+import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.Wifi
 import androidx.compose.material.icons.outlined.WifiTethering
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -94,6 +104,7 @@ import moe.shizuku.manager.BuildConfig
 import moe.shizuku.manager.R
 import moe.shizuku.manager.ShizukuSettings
 import moe.shizuku.manager.settings.BugReportDialogActivity
+import moe.shizuku.manager.settings.SettingsBackup
 import moe.shizuku.manager.ui.Detail
 import moe.shizuku.manager.ui.televisionReturnFocus
 import moe.shizuku.manager.ui.component.ScrollToTopButton
@@ -124,18 +135,60 @@ import rikka.shizuku.manager.ShizukuLocales
 /** The agent a system uid start goes through, checked for when it is not running yet. */
 private const val FOTA_AGENT_PACKAGE = "com.sdet.fotaagent"
 
+/** The settings categories. The tab lists these and opens one at a time. */
+private enum class SettingsSection(
+    @StringRes val titleRes: Int,
+    @StringRes val summaryRes: Int,
+    val icon: ImageVector
+) {
+    STARTUP(
+        R.string.settings_section_startup,
+        R.string.settings_section_startup_summary,
+        Icons.Outlined.PowerSettingsNew
+    ),
+    WIRELESS(
+        R.string.settings_section_wireless,
+        R.string.settings_section_wireless_summary,
+        Icons.Outlined.Wifi
+    ),
+    TOOLS(
+        R.string.settings_section_tools,
+        R.string.settings_section_tools_summary,
+        Icons.Outlined.Tune
+    ),
+    APPEARANCE(
+        R.string.settings_section_appearance,
+        R.string.settings_section_appearance_summary,
+        Icons.Outlined.Palette
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
+fun SettingsScreen(
+    bottomPadding: Dp,
+    onOpenDetail: (Detail) -> Unit,
+    onRunSetup: () -> Unit,
+    showNavigationBarSetting: Boolean = false,
+    alwaysShowNavigationBar: Boolean = false,
+    onAlwaysShowNavigationBarChange: (Boolean) -> Unit = {}
+) {
     val context = LocalContext.current
+
+    // Null is the index. Anything else is one of the short category screens.
+    var section by rememberSaveable { mutableStateOf<SettingsSection?>(null) }
 
     var startOnBoot by remember { mutableStateOf(ShizukuSettings.getStartOnBoot(context)) }
     var watchdog by remember { mutableStateOf(ShizukuSettings.getWatchdog()) }
     var autoDisableUsb by remember { mutableStateOf(ShizukuSettings.getAutoDisableUsbDebugging()) }
     var autoDisableWireless by remember { mutableStateOf(ShizukuSettings.getAutoDisableWirelessDebugging()) }
     var startMethod by remember { mutableStateOf(ShizukuSettings.getStartMethod()) }
+    // Wireless debugging starts at Android 11. On older devices the wireless methods and the
+    // rows that only exist to manage wireless debugging are not offered at all.
+    val wirelessSupported = remember { StartMethodGuard.supportsWirelessDebugging() }
     var waitForWifi by remember { mutableStateOf(ShizukuSettings.getWaitForWifi()) }
     var forceWireless by remember { mutableStateOf(ShizukuSettings.getForceWirelessDebugging()) }
+    val forceWirelessActive = wirelessSupported && forceWireless
     var persistAdbPort by remember { mutableStateOf(ShizukuSettings.getPersistAdbPort()) }
     var tcpMode by remember { mutableStateOf(ShizukuSettings.getTcpMode()) }
     var tcpPort by remember { mutableStateOf(ShizukuSettings.getTcpPort().toString()) }
@@ -153,6 +206,7 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
     }
 
     var legacyPairing by remember { mutableStateOf(ShizukuSettings.getLegacyPairing()) }
+    var secureQuickTiles by remember { mutableStateOf(ShizukuSettings.getSecureQuickTiles()) }
     var adbWithoutDeveloperOptions by remember {
         mutableStateOf(ShizukuSettings.getAdbWithoutDeveloperOptions())
     }
@@ -213,7 +267,44 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
     var restartAction by remember { mutableStateOf<(() -> Unit)?>(null) }
     var restartWifiNote by remember { mutableStateOf(false) }
     var batteryPrompt by remember { mutableStateOf<(() -> Unit)?>(null) }
+    var restorePending by remember { mutableStateOf<SettingsBackup.Backup?>(null) }
     val scope = rememberCoroutineScope()
+
+    val exportLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json")
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val count = withContext(Dispatchers.IO) { SettingsBackup.export(context, uri) }
+            Toast.makeText(
+                context,
+                if (count != null) {
+                    context.getString(R.string.settings_backup_exported, count)
+                } else {
+                    context.getString(R.string.settings_backup_export_failed)
+                },
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
+    val restoreLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        scope.launch {
+            val backup = withContext(Dispatchers.IO) { SettingsBackup.read(context, uri) }
+            if (backup == null) {
+                Toast.makeText(
+                    context,
+                    R.string.settings_backup_unreadable,
+                    Toast.LENGTH_LONG
+                ).show()
+            } else {
+                restorePending = backup
+            }
+        }
+    }
 
     var startMethodDialog by remember { mutableStateOf(false) }
     var tcpPortDialog by remember { mutableStateOf(false) }
@@ -265,9 +356,26 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
         }
     }
 
+    val currentSection = section
+
+    // Back leaves the category before it leaves the tab.
+    BackHandler(enabled = currentSection != null) { section = null }
+
     Column(modifier = Modifier.fillMaxSize()) {
         TopAppBar(
-            title = { Text(stringResource(R.string.tab_settings)) },
+            title = {
+                Text(
+                    if (currentSection == null) stringResource(R.string.tab_settings)
+                    else stringResource(currentSection.titleRes)
+                )
+            },
+            navigationIcon = {
+                if (currentSection != null) {
+                    IconButton(onClick = { section = null }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
+                    }
+                }
+            },
             windowInsets = WindowInsets(0.dp, 0.dp, 0.dp, 0.dp)
         )
 
@@ -282,9 +390,31 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                 contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = bottomPadding),
                 verticalArrangement = Arrangement.spacedBy(13.dp)
             ) {
-            item {
-                SettingsSectionHeader(R.string.settings_section_startup)
+            if (currentSection == null) {
+                item {
+                    SegmentedColumn(modifier = Modifier.fillMaxWidth()) {
+                        SettingsSection.entries.forEach { target ->
+                            item {
+                                SegmentedListItem(
+                                    centerSlots = true,
+                                    leadingContent = { SettingsIcon(target.icon) },
+                                    headlineContent = { Text(stringResource(target.titleRes)) },
+                                    supportingContent = { Text(stringResource(target.summaryRes)) },
+                                    trailingContent = {
+                                        Icon(
+                                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                            contentDescription = null
+                                        )
+                                    },
+                                    onClick = { section = target }
+                                )
+                            }
+                        }
+                    }
+                }
             }
+
+            if (currentSection == SettingsSection.STARTUP) {
             item {
                 SegmentedColumn(modifier = Modifier.fillMaxWidth()) {
                     item {
@@ -357,39 +487,41 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                                 }
                         )
                     }
-                    item {
-                        SegmentedListItem(
-                            centerSlots = true,
-                            leadingContent = { SettingsIcon(Icons.Outlined.Wifi) },
-                            headlineContent = { Text(stringResource(R.string.settings_auto_disable_wireless_debugging)) },
-                            supportingContent = {
-                                Text(
-                                    stringResource(
-                                        when {
-                                            forceWireless ->
-                                                R.string.settings_unavailable_while_forcing_wireless
+                    if (wirelessSupported) {
+                        item {
+                            SegmentedListItem(
+                                centerSlots = true,
+                                leadingContent = { SettingsIcon(Icons.Outlined.Wifi) },
+                                headlineContent = { Text(stringResource(R.string.settings_auto_disable_wireless_debugging)) },
+                                supportingContent = {
+                                    Text(
+                                        stringResource(
+                                            when {
+                                                forceWirelessActive ->
+                                                    R.string.settings_unavailable_while_forcing_wireless
 
-                                            !writeSecureSettings ->
-                                                R.string.settings_needs_write_secure_settings
+                                                !writeSecureSettings ->
+                                                    R.string.settings_needs_write_secure_settings
 
-                                            else -> R.string.settings_auto_disable_wireless_debugging_summary
-                                        }
+                                                else -> R.string.settings_auto_disable_wireless_debugging_summary
+                                            }
+                                        )
                                     )
-                                )
-                            },
-                            // Turning wireless debugging off when Shizuku stops is the one
-                            // thing the experiment cannot survive, so this row is not offered
-                            // while it is on rather than flipped and then flipped back.
-                            switchState = autoDisableWireless && !forceWireless,
-                            switchEnabled =
-                                !forceWireless && (autoDisableWireless || writeSecureSettings),
-                            onSwitchChange =
-                                {
-                                    ShizukuSettings.getPreferences().edit()
-                                        .putBoolean(ShizukuSettings.Keys.KEY_AUTO_DISABLE_WIRELESS_DEBUGGING, it).apply()
-                                    autoDisableWireless = it
-                                }
-                        )
+                                },
+                                // Turning wireless debugging off when Shizuku stops is the one
+                                // thing the experiment cannot survive, so this row is not offered
+                                // while it is on rather than flipped and then flipped back.
+                                switchState = autoDisableWireless && !forceWirelessActive,
+                                switchEnabled =
+                                    !forceWirelessActive && (autoDisableWireless || writeSecureSettings),
+                                onSwitchChange =
+                                    {
+                                        ShizukuSettings.getPreferences().edit()
+                                            .putBoolean(ShizukuSettings.Keys.KEY_AUTO_DISABLE_WIRELESS_DEBUGGING, it).apply()
+                                        autoDisableWireless = it
+                                    }
+                            )
+                        }
                     }
                     item {
                         SegmentedListItem(
@@ -402,7 +534,13 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                                 Text(
                                     stringResource(startMethodLabelRes(startMethod)) +
                                         if (rootMethodDropped) {
-                                            "\n" + stringResource(R.string.settings_start_method_root_unavailable)
+                                            "\n" + stringResource(
+                                                if (wirelessSupported) {
+                                                    R.string.settings_start_method_root_unavailable
+                                                } else {
+                                                    R.string.settings_start_method_root_unavailable_usb
+                                                }
+                                            )
                                         } else {
                                             ""
                                         }
@@ -452,15 +590,15 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                             supportingContent = {
                                 Text(
                                     stringResource(
-                                        if (forceWireless) R.string.settings_unavailable_while_forcing_wireless
+                                        if (forceWirelessActive) R.string.settings_unavailable_while_forcing_wireless
                                         else R.string.settings_wait_for_wifi_summary
                                     )
                                 )
                             },
                             // Waiting for a network is what the experiment starts without,
                             // so asking for both at once is not a state worth offering.
-                            switchState = waitForWifi && !forceWireless,
-                            switchEnabled = !forceWireless,
+                            switchState = waitForWifi && !forceWirelessActive,
+                            switchEnabled = !forceWirelessActive,
                             onSwitchChange =
                                 {
                                     ShizukuSettings.setWaitForWifi(it)
@@ -468,6 +606,7 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                                 }
                         )
                     }
+                    if (wirelessSupported) {
                     item {
                         // The experiment is a write to the settings provider, and a fresh
                         // install has no WRITE_SECURE_SETTINGS to make it with: switching it
@@ -548,6 +687,7 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                                 }
                         )
                     }
+                    }
                     item {
                         SegmentedListItem(
                             centerSlots = true,
@@ -570,10 +710,9 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                     }
                 }
             }
-
-            item {
-                SettingsSectionHeader(R.string.settings_section_wireless)
             }
+
+            if (currentSection == SettingsSection.WIRELESS) {
             item {
                 SegmentedColumn(modifier = Modifier.fillMaxWidth()) {
                     item {
@@ -676,12 +815,26 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                     }
                 }
             }
-
-            item {
-                SettingsSectionHeader(R.string.settings_section_tools)
             }
+
+            if (currentSection == SettingsSection.TOOLS) {
             item {
                 SegmentedColumn(modifier = Modifier.fillMaxWidth()) {
+                    item {
+                        SegmentedListItem(
+                            centerSlots = true,
+                            leadingContent = { SettingsIcon(Icons.Outlined.Lock) },
+                            headlineContent = { Text(stringResource(R.string.settings_secure_quick_tiles)) },
+                            supportingContent = {
+                                Text(stringResource(R.string.settings_secure_quick_tiles_summary))
+                            },
+                            switchState = secureQuickTiles,
+                            onSwitchChange = {
+                                ShizukuSettings.setSecureQuickTiles(it)
+                                secureQuickTiles = it
+                            }
+                        )
+                    }
                     // Battery optimisation moved onto the permissions page: it answers the
                     // same question as the rest of that page (may this app do its job?)
                     item {
@@ -695,6 +848,21 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                                 Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
                             },
                             onClick = { onOpenDetail(Detail.PERMISSIONS) }
+                        )
+                    }
+                    // The setup is not a permission and not a setting, but this is where
+                    // somebody goes looking for a thing they have already seen once: the same
+                    // pages, on demand, with the answers already filled in.
+                    item {
+                        SegmentedListItem(
+                            centerSlots = true,
+                            leadingContent = { SettingsIcon(Icons.Outlined.Tune) },
+                            headlineContent = { Text(stringResource(R.string.settings_run_setup)) },
+                            supportingContent = { Text(stringResource(R.string.settings_run_setup_summary)) },
+                            trailingContent = {
+                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                            },
+                            onClick = onRunSetup
                         )
                     }
                     item {
@@ -740,8 +908,51 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
             }
 
             item {
-                SettingsSectionHeader(R.string.settings_section_appearance)
+                SettingsSectionHeader(titleRes = R.string.settings_backup_section)
             }
+            item {
+                SegmentedColumn(modifier = Modifier.fillMaxWidth()) {
+                    item {
+                        SegmentedListItem(
+                            centerSlots = true,
+                            leadingContent = { SettingsIcon(Icons.Outlined.SaveAlt) },
+                            headlineContent = { Text(stringResource(R.string.settings_backup_export)) },
+                            supportingContent = {
+                                Text(stringResource(R.string.settings_backup_export_summary))
+                            },
+                            trailingContent = {
+                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                            },
+                            onClick = { exportLauncher.launch(SettingsBackup.fileName()) }
+                        )
+                    }
+                    item {
+                        SegmentedListItem(
+                            centerSlots = true,
+                            leadingContent = { SettingsIcon(Icons.Outlined.Restore) },
+                            headlineContent = { Text(stringResource(R.string.settings_backup_restore)) },
+                            supportingContent = {
+                                Text(stringResource(R.string.settings_backup_restore_summary))
+                            },
+                            trailingContent = {
+                                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null)
+                            },
+                            onClick = {
+                                restoreLauncher.launch(
+                                    arrayOf(
+                                        "application/json",
+                                        "text/plain",
+                                        "application/octet-stream"
+                                    )
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+            }
+
+            if (currentSection == SettingsSection.APPEARANCE) {
             item {
                 SegmentedColumn(modifier = Modifier.fillMaxWidth()) {
                     item {
@@ -798,6 +1009,20 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                                 }
                         )
                     }
+                    if (showNavigationBarSetting) {
+                        item {
+                            SegmentedListItem(
+                                centerSlots = true,
+                                leadingContent = { SettingsIcon(Icons.Outlined.Visibility) },
+                                headlineContent = { Text(stringResource(R.string.settings_always_show_navigation_bar)) },
+                                supportingContent = {
+                                    Text(stringResource(R.string.settings_always_show_navigation_bar_summary))
+                                },
+                                switchState = alwaysShowNavigationBar,
+                                onSwitchChange = onAlwaysShowNavigationBarChange
+                            )
+                        }
+                    }
                     item {
                         SegmentedListItem(
                             centerSlots = true,
@@ -819,10 +1044,9 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                     }
                 }
             }
-
-            item {
-                SettingsSectionHeader(R.string.settings_section_about)
             }
+
+            if (currentSection == null) {
             item {
                 SegmentedColumn(modifier = Modifier.fillMaxWidth()) {
                     item {
@@ -975,6 +1199,7 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                 }
             }
             }
+            }
 
             ScrollToTopButton(
                 listState = listState,
@@ -1104,6 +1329,63 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
         )
     }
 
+    restorePending?.let { backup ->
+        AlertDialog(
+            onDismissRequest = { restorePending = null },
+            title = { Text(stringResource(R.string.settings_backup_restore_title)) },
+            text = { Text(stringResource(R.string.settings_backup_restore_message, backup.count)) },
+            confirmButton = {
+                PillButton(onClick = {
+                    restorePending = null
+                    val oldLanguage = ShizukuSettings.getLanguageTag()
+                    val oldNightMode = ShizukuSettings.getNightMode()
+                    scope.launch {
+                        val count = withContext(Dispatchers.IO) {
+                            SettingsBackup.apply(context, backup)
+                        }
+                        if (count == null) {
+                            Toast.makeText(
+                                context,
+                                R.string.settings_backup_restore_failed,
+                                Toast.LENGTH_LONG
+                            ).show()
+                            return@launch
+                        }
+
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.settings_backup_restored, count),
+                            Toast.LENGTH_LONG
+                        ).show()
+
+                        val newLanguage = ShizukuSettings.getLanguageTag()
+                        val newNightMode = ShizukuSettings.getNightMode()
+                        val languageChanged = oldLanguage != newLanguage
+                        val themeChanged = oldNightMode != newNightMode
+
+                        AppCompatDelegate.setDefaultNightMode(newNightMode)
+                        ThemeState.refresh()
+                        AppLocale.select(context, newLanguage)
+
+                        val activity = AppLocale.activityOf(context)
+                        val needsRecreate =
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                !languageChanged && !themeChanged
+                            } else {
+                                !themeChanged
+                            }
+                        if (needsRecreate) activity?.recreate()
+                    }
+                }) { Text(stringResource(R.string.settings_backup_restore_action)) }
+            },
+            dismissButton = {
+                PillButtonQuiet(onClick = { restorePending = null }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            }
+        )
+    }
+
     if (themeDialog) {
         ChoiceDialog(
             title = stringResource(R.string.settings_theme),
@@ -1194,7 +1476,11 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
         ChoiceDialog(
             title = stringResource(R.string.settings_start_method),
             options = buildList {
-                add(ShizukuSettings.StartMethod.WIRELESS.toString() to stringResource(R.string.start_method_wireless))
+                // Wireless debugging starts at Android 11, so the two wireless methods are
+                // offered only where the platform has something for them to connect to.
+                if (wirelessSupported) {
+                    add(ShizukuSettings.StartMethod.WIRELESS.toString() to stringResource(R.string.start_method_wireless))
+                }
                 add(ShizukuSettings.StartMethod.USB.toString() to stringResource(R.string.start_method_usb))
                 add(ShizukuSettings.StartMethod.SYSTEM.toString() to stringResource(R.string.start_method_system))
                 // Offered only where it can work the same rule the home screen's root
@@ -1206,7 +1492,7 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
                 // wireless start with that fight switched on. Turning the experiment off takes
                 // the default back to wireless debugging, so this cannot be chosen and then
                 // left meaning something else.
-                if (forceWireless) {
+                if (wirelessSupported && forceWireless) {
                     add(
                         ShizukuSettings.StartMethod.WIRELESS_NO_NETWORK.toString() to
                             stringResource(R.string.start_method_wireless_no_network)
@@ -1216,7 +1502,7 @@ fun SettingsScreen(bottomPadding: Dp, onOpenDetail: (Detail) -> Unit) {
             selected = startMethod.toString(),
             onDismiss = { startMethodDialog = false },
             onSelect = {
-                val value = it.toIntOrNull() ?: ShizukuSettings.StartMethod.WIRELESS
+                val value = it.toIntOrNull() ?: ShizukuSettings.StartMethod.USB
                 ShizukuSettings.setStartMethod(value)
                 startMethod = value
                 startMethodDialog = false

@@ -60,6 +60,9 @@
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
     <string name="dialog_adb_pairing_accessibility_permission">Android sperrt diesen Schalter für Apps, die nicht aus einem App-Store installiert wurden. Lassen Sie die App-Op ^1 zu, um die Bedienungshilfe einzuschalten. In der Liste der Bedienungshilfen wird dies als „Gesteuert durch eingeschränkte Einstellung“ angezeigt.\n\nÖffnen Sie die App-Info und wählen Sie im Menü „Eingeschränkte Einstellungen zulassen“ aus oder führen Sie auf einem Computer Folgendes aus:\n\n^2\n\nBeide Möglichkeiten funktionieren. Danach lässt sich der Schalter bedienen.</string>
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
     <string name="dialog_adb_pairing_open_app_info">App-Info</string>
     <string name="dialog_adb_pairing_accessibility_navigate">Starten Sie die Kopplung mit den folgenden Schritten:\n- Öffnen Sie die „Entwickleroptionen“\n- Aktivieren Sie „USB-Debugging“ und „Debugging über WLAN“\n- Tippen Sie auf die linke Seite von „Debugging über WLAN“\n- Tippen Sie auf „Gerät über einen Kopplungscode koppeln“. Shizuku erkennt den Kopplungscode automatisch.</string>
     <string name="adb_pairing_requires_multi_window">Wechseln Sie zuerst in den Splitscreen-Modus.</string>
@@ -177,6 +180,7 @@
     <string name="activities_copy">Kopieren</string>
     <string name="activities_edit_as_intent">Als Intent bearbeiten</string>
     <string name="activities_copied">Kopiert</string>
+    <string name="activities_save">Speichern</string>
     <string name="tab_intent_builder">Intent-Builder</string>
     <string name="intent_builder_note">Erstellen und senden Sie einen Intent. Sie können Aktion, Daten, Typ, Komponente, Kategorien, Extras und Flags festlegen. Sie können auch einen Intent aus einer URI laden, z. B. intent:#Intent;action=android.intent.action.VIEW;data=https://example.com;end. Dieses Format verwenden Activity Launcher und die meisten Automatisierungstools. Beim Laden werden die Felder ausgefüllt, sodass Sie den Intent vor dem Senden prüfen und bearbeiten können.</string>
     <string name="intent_uri">Intent-URI</string>
@@ -463,6 +467,7 @@
     <string name="start_system_custom_copy_failed">Der Befehl steht oben und kann von Hand kopiert werden.</string>
     <string name="settings_section_startup">Start</string>
     <string name="settings_section_wireless">Debugging über WLAN</string>
+    <string name="settings_backup_restore_action">Wiederherstellen</string>
     <string name="settings_section_appearance">Darstellung</string>
     <string name="settings_section_about">Über</string>
     <string name="settings_theme">Design</string>
@@ -603,6 +608,12 @@
     <string name="permissions_accessibility">Bedienungshilfe</string>
     <string name="permissions_accessibility_summary">Liest den Kopplungscode automatisch aus.</string>
     <string name="permissions_battery_summary">Verhindert, dass Android Shizuku im Hintergrund beendet.</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
+    <string name="setup_wireless_title">Debugging über WLAN</string>
+    <string name="setup_usb_title">USB-Debugging</string>
     <string name="settings_help">Hilfe</string>
     <string name="settings_translate">Bei der Übersetzung mitwirken</string>
     <string name="settings_translate_note">Die App auf Crowdin übersetzen.</string>
@@ -955,6 +966,10 @@
     <string name="app_info_yes">Ja</string>
     <string name="app_info_no">Nein</string>
     <string name="tab_wifi_passwords">WLAN-Passwörter</string>
+    <string name="accessibility_boot">Beim Gerätestart starten</string>
+    <string name="accessibility_filter_off">Aus</string>
+    <string name="accessibility_filter_on">An</string>
+    <string name="accessibility_notification_channel">Bedienungshilfen</string>
     <string name="wifi_passwords_show">Passwort anzeigen</string>
     <string name="wifi_passwords_hide">Passwort ausblenden</string>
     <string name="wifi_passwords_copy">Passwort kopieren</string>

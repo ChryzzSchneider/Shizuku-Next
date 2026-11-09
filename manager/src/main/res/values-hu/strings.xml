@@ -69,6 +69,9 @@ lehetőségre\n- Írja be az értesítésben megjelenő párosítási kódot</st
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
     <string name="dialog_adb_pairing_accessibility_permission">Az Android tiltja ezt a kapcsolót a Play-en kívül telepített alkalmazásoknál. Engedélyezze a(z) ^1 alkalmazás számára a kisegítő lehetőségek szolgáltatás bekapcsolását. A kisegítő lehetőségek listájában ez \"Korlátozott beállításként szabályzott\" módon jelenik meg..\n\nNyissa meg az Alkalmazásinformációkat, és válassza a \"Korlátozott beállítások engedélyezése\" lehetőséget a menüből, vagy futtassa ezt számítógépen:.\n\n^2.\n\nBármelyik opció működik. A kapcsoló ezután elérhető lesz.</string>
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
     <string name="dialog_adb_pairing_open_app_info">Alkalmazás infó</string>
     <string name="dialog_adb_pairing_accessibility_navigate">Kérjük, kezdje el a párosítást a következő lépések végrehajtásával:\n- Navigáljon a \"Fejlesztői beállítások\" menüpontra\n-Engedélyezze az \"USB hibakeresés\"-t és a \"Vezeték nélküli hibakeresés\"-t\n- Koppintson a \"Vezeték nélküli hibakeresés\" bal oldalára\n- Koppintson az \"Eszköz párosítása párosító kóddal\" lehetőségre. A Shizuku automatikusan felismeri a párosító kódot.</string>
     <string name="adb_pairing_requires_multi_window">Kérjük, először lépjen osztott képernyős módba.</string>
@@ -194,6 +197,8 @@ A Shizuku közvetlenül a párbeszédpanelből olvassa be a kódot és a portot,
     <string name="activities_copy">Másolás</string>
     <string name="activities_edit_as_intent">Szerkesztés intent-ként</string>
     <string name="activities_copied">Másolva</string>
+    <string name="activities_apps_section">Alkalmazások</string>
+    <string name="activities_save">Mentés</string>
     <string name="tab_intent_builder">Intent készítő</string>
     <string name="intent_action">Művelet</string>
     <string name="intent_data">Adat</string>
@@ -360,6 +365,7 @@ A Shizuku közvetlenül a párbeszédpanelből olvassa be a kódot és a portot,
     <string name="settings_section_startup">Indítás</string>
     <string name="settings_section_wireless">Vezeték nélküli hibakeresés</string>
     <string name="settings_section_tools">Eszközök</string>
+    <string name="settings_backup_restore_action">Visszaállítás</string>
     <string name="settings_section_appearance">Megjelenés</string>
     <string name="settings_section_about">Névjegy</string>
     <string name="settings_theme">Téma</string>
@@ -493,6 +499,13 @@ A Shizuku közvetlenül a párbeszédpanelből olvassa be a kódot és a portot,
     <string name="permissions_accessibility">Kisegítő lehetőségek szolgáltatás</string>
     <string name="permissions_accessibility_summary">Automatikusan beolvassa a párosítási kódot.</string>
     <string name="permissions_battery_summary">Megakadályozza, hogy az Android leállítsa a Shizuku háttérbeli futását.</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
+    <string name="setup_root_title">Root</string>
+    <string name="setup_wireless_title">Vezeték nélküli hibakeresés</string>
+    <string name="setup_usb_title">USB hibakeresés</string>
     <string name="settings_help">Segítség</string>
     <string name="settings_translate">Közreműködés a fordításban</string>
     <string name="settings_report_bug">Hiba jelentése</string>
@@ -724,6 +737,10 @@ A Shizuku közvetlenül a párbeszédpanelből olvassa be a kódot és a portot,
     <string name="app_info_installer">Telepítve innen</string>
     <string name="app_info_updated">Frissítve</string>
     <string name="tab_wifi_passwords">Wi-Fi jelszavak</string>
+    <string name="accessibility_boot">Indítás rendszerindításkor</string>
+    <string name="accessibility_filter_off">Ki</string>
+    <string name="accessibility_filter_on">Be</string>
+    <string name="accessibility_notification_channel">Kisegítő lehetőségek szolgáltatás</string>
     <string name="wifi_passwords_show">Jelszó megjelenítése</string>
     <string name="wifi_passwords_hide">Jelszó elrejtése</string>
     <string name="wifi_passwords_copy">Jelszó másolása</string>
@@ -764,4 +781,5 @@ A Shizuku közvetlenül a párbeszédpanelből olvassa be a kódot és a portot,
     <string name="tab_install">Alkalmazás telepítő</string>
     <string name="install_details_version">Verzió</string>
     <string name="install_location_auto">Fejlesztői lehetőségek</string>
+    <string name="install_source_shell">Shell</string>
 </resources>

@@ -34,6 +34,9 @@
          row means, and both ways to open it. The App info menu is the only one available on a
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
     <string name="dialog_adb_pairing_accessibility_navigate">กรุณาเริ่มจับคู่โดยดำเนินการตามขั้นตอนต่อไปนี้:\n-
         ไปที่ \"ตัวเลือกสำหรับนักพัฒนา\"\n- เปิดใช้งาน \"การแก้จุดบกพร่อง USB\" และ
         \"การแก้จุดบกพร่องแบบไร้สาย\"\n- แตะด้านซ้ายของ \"การแก้จุดบกพร่องแบบไร้สาย\"\n- แตะ
@@ -127,6 +130,10 @@
     <string name="settings_language">ภาษา</string>
     <string name="settings_black_night_theme">ธีมมืดมิด</string>
     <string name="settings_black_night_theme_summary">ใช้ธีมสีดำสนิทหากธีมมืดถูกเปิดอยู่</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
     <string name="settings_help">ช่วย</string>
     <string name="settings_report_bug">รายงานจุดบกพร่อง</string>
     <!--
@@ -234,5 +241,6 @@
          because three share one row; the tile picker spells them out in full. -->
     <!-- Said after a switch outside the app is tapped, since a tile or a widget gives no other
          answer: the state is on the control, but the control is not where the finger is. -->
+    <string name="accessibility_boot">เริ่มต้นเมื่อบูตเครื่อง</string>
     <string name="install_location_auto">ตัวเลือกสำหรับนักพัฒนาแอป</string>
 </resources>

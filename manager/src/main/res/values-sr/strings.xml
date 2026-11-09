@@ -31,6 +31,9 @@
          row means, and both ways to open it. The App info menu is the only one available on a
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
     <string name="dialog_adb_pairing_accessibility_navigate">Почните упаривање пратећи следеће
         кораке:\n- Идите на „Опције за програмере“\n- Омогућите „USB отклањање грешака“ и „Бежично
         отклањање грешака“\n- Додирните леву страну „Бежично отклањање грешака“\n- Додирните „Упари
@@ -130,6 +133,10 @@
     <string name="settings_black_night_theme">Тема црне ноћи</string>
     <string name="settings_black_night_theme_summary">Користите чисто црну тему ако је омогућен
         ноћни режим</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
     <string name="settings_help">Помоћ</string>
     <string name="settings_report_bug">Пријави грешку</string>
     <!--
@@ -239,5 +246,6 @@
          because three share one row; the tile picker spells them out in full. -->
     <!-- Said after a switch outside the app is tapped, since a tile or a widget gives no other
          answer: the state is on the control, but the control is not where the finger is. -->
+    <string name="accessibility_boot">Покрени при покретању</string>
     <string name="install_location_auto">Razvojne opcije programera</string>
 </resources>

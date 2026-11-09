@@ -11,11 +11,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import moe.shizuku.manager.adb.AdbPairingService
 import moe.shizuku.manager.home.showAccessibilityDialog
 import moe.shizuku.manager.receiver.ShizukuReceiverStarter
 import moe.shizuku.manager.ui.ShizukuApp
+import moe.shizuku.manager.ui.screen.SetupScreen
+import moe.shizuku.manager.ui.theme.ShizukuTheme
 import moe.shizuku.manager.utils.AppLocale
+import moe.shizuku.manager.utils.Diag
+import moe.shizuku.manager.utils.EnvironmentUtils
 
 class MainActivity : ComponentActivity() {
 
@@ -62,9 +70,33 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         handleIntent(intent)
-        requestNotificationPermission()
+
+        // A fresh install meets the guided setup instead of the notification dialog, because
+        // that dialog is where the setup explains it: asked from here it arrived before anything
+        // had been drawn, with nothing to say why. Installs that already knew the app, and a TV
+        // with no keyboard-free way through a wizard, keep the dialog and go straight in.
+        val showSetup = !ShizukuSettings.isSetupDone(this) && !EnvironmentUtils.isTelevision()
+        if (!showSetup) {
+            requestNotificationPermission()
+        }
+
         setContent {
-            ShizukuApp()
+            var setup by rememberSaveable { mutableStateOf(showSetup) }
+            if (setup) {
+                ShizukuTheme {
+                    SetupScreen(
+                        onFinish = {
+                            // Skipping writes the same thing as finishing: the setup is not
+                            // asked again, and whatever was left undone is still on the home
+                            // screen, where it was before.
+                            ShizukuSettings.setSetupDone()
+                            setup = false
+                        }
+                    )
+                }
+            } else {
+                ShizukuApp(onRunSetup = { setup = true })
+            }
         }
     }
 
@@ -74,6 +106,10 @@ class MainActivity : ComponentActivity() {
         handleIntent(intent)
     }
 
+    /**
+     * Handles the extras that start Shizuku or ask for the pairing dialog, including the request
+     * sent by the accessibility service when it connects.
+     */
     private fun handleIntent(intent: Intent?) {
         if (intent == null) return
 
@@ -84,7 +120,12 @@ class MainActivity : ComponentActivity() {
         }
 
         if (intent.getBooleanExtra(AppConstants.EXTRA_SHOW_PAIRING_DIALOG, false)) {
-            showAccessibilityDialog()
+            // Asked for by the pairing accessibility service as it connects. A throw here would
+            // take the whole process down with it, service included, and Android then switches
+            // the service back off - which is how it looked on TV. The home screen guards the
+            // same call the same way.
+            runCatching { showAccessibilityDialog() }
+                .onFailure { Diag.warn(AppConstants.TAG, "Could not show the pairing dialog", it) }
         }
     }
 }

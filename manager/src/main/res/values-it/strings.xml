@@ -13,6 +13,7 @@
     <string name="home_wireless_adb_title"><![CDATA[Avvia tramite debug wireless]]></string>
     <string name="home_wireless_adb_starting_without_wifi">Avvio senza rete: il debug wireless viene richiesto al dispositivo più volte finché non resta attivo. Possono passare fino a due minuti prima che si avvii o rinunci.</string>
     <string name="home_usb_adb_needs_network">Un avvio via USB usa la porta ADB classica e riaprirla richiede una rete. Connettiti una volta al Wi-Fi, oppure scegli <b>Avvio senza Wi-Fi</b> come metodo di avvio e avvia invece tramite il debug wireless.</string>
+    <string name="home_usb_adb_needs_computer">Per l\'avvio tramite USB serve la porta ADB classica. Su questa versione di Android, collega il dispositivo a un computer e avvia Shizuku con il comando ADB indicato in Altri metodi.</string>
     <string name="home_wireless_adb_summary">Si avvia utilizzando il debug wireless.</string>
     <string name="home_usb_adb_title"><![CDATA[Avvia tramite debug USB]]></string>
     <string name="home_usb_adb_summary">Si avvia utilizzando il debug USB.</string>
@@ -65,6 +66,10 @@
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
     <string name="dialog_adb_pairing_accessibility_permission">Android blocca questo interruttore per le app installate al di fuori di uno store di app. Consenti l\'app-op ^1 per attivare il servizio di accessibilità. L\'elenco dell\'accessibilità lo indica come \"Controllato da un\'impostazione con limitazioni\".\n\nApri Info app e scegli \"Consenti impostazioni con limitazioni\" dal menu, oppure esegui questo comando da un computer:\n\n^2\n\nVa bene una qualsiasi delle due opzioni. Dopo, l\'interruttore funzionerà.</string>
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
+    <string name="dialog_adb_pairing_accessibility_permission_tv">Android blocca questo interruttore per le app installate al di fuori di uno store di app e, su una TV, Informazioni app non ha l\'opzione \"Consenti impostazioni con limitazioni\" per sbloccarlo. Serve una sola volta un computer collegato a questa TV tramite ADB: puoi concedere il permesso indicato sopra, che consente a Shizuku di attivare il servizio da solo, oppure sbloccare l\'interruttore con:\n\n^1</string>
     <string name="dialog_adb_pairing_open_app_info">Informazioni app</string>
     <string name="dialog_adb_pairing_accessibility_enable">L\'accoppiamento automatico legge il codice dalla finestra di sistema tramite il servizio di accessibilità di Shizuku, quindi deve essere attivo, ma solo per il tempo necessario: il servizio si disattiva da solo una volta trovato il codice, oppure dopo un minuto per risparmiare batteria. Di norma Shizuku lo attiva in autonomia, ma serve il permesso WRITE_SECURE_SETTINGS, che dopo una nuova installazione non è ancora stato concesso.\n\nAttivalo nella schermata successiva, digita tu il codice in Manuale, oppure concedi il permesso una volta:\n\nadb shell pm grant %1$s android.permission.WRITE_SECURE_SETTINGS</string>
     <string name="dialog_adb_pairing_accessibility_navigate">Avvia l\'accoppiamento seguendo questi passaggi:\n- Vai su \"Opzioni sviluppatore\"\n- Attiva \"Debug USB\" e \"Debug wireless\"\n- Tocca la parte sinistra di \"Debug wireless\"\n- Tocca \"Accoppia dispositivo con codice di accoppiamento\". Shizuku rileverà automaticamente il codice di accoppiamento.</string>
@@ -238,6 +243,11 @@
     <string name="activities_copy">Copia</string>
     <string name="activities_edit_as_intent">Modifica come intento</string>
     <string name="activities_copied">Copiato</string>
+    <string name="activities_saved">Attività salvate</string>
+    <string name="activities_apps_section">App</string>
+    <string name="activities_save">Salva</string>
+    <string name="activities_unsave">Rimuovi da salvate</string>
+    <string name="activities_gone">Questa attività non è più installata.</string>
     <string name="tab_intent_builder">Generatore di intent</string>
     <string name="intent_builder_note">Crea e invia un intent. Puoi impostarne azione, dati, tipo, componente, categorie, extra e flag. Puoi anche caricare un intent da un URI, per esempio intent:#Intent;action=android.intent.action.VIEW;data=https://example.com;end. È il formato usato da Activity Launcher e dalla maggior parte degli strumenti di automazione. Caricarne uno compila i campi, così puoi controllarlo e modificarlo prima di inviarlo.</string>
     <string name="intent_uri">URI dell\'intent</string>
@@ -420,6 +430,8 @@
     <string name="status_value_none">-</string>
     <string name="status_running_short">In esecuzione</string>
     <string name="status_stopped_short">Arrestato</string>
+    <string name="home_status_service_active">Il servizio Shizuku è attivo</string>
+    <string name="home_status_service_stopped">Il servizio Shizuku non è in esecuzione</string>
     <string name="action_start">Avvia</string>
     <string name="tools_stealth">Modalità invisibile</string>
     <string name="tools_modules">Moduli</string>
@@ -472,7 +484,7 @@
     <string name="modules_error_set_enabled">Impossibile attivare o disattivare il modulo: la sua directory non è scrivibile.</string>
     <string name="modules_trust">Autorizza</string>
     <string name="modules_untrust">Revoca</string>
-    <string name="modules_full_trust">Fiducia totale</string>
+    <string name="modules_full_trust">Attendibilità totale</string>
     <string name="modules_trust_confirm">Autorizzare %1$s?</string>
     <string name="modules_trust_confirm_message">I suoi comandi vengono eseguiti senza essere prima mostrati, sia che provengano dalla sua azione, dal suo servizio o dalla sua WebUI. Tutto il resto resta invariato: il modulo si disattiva ancora con il suo interruttore e il suo output è ancora limitato e si interrompe comunque allo scadere del tempo. Autorizza solo un modulo che hai letto e compreso.</string>
     <string name="module_update_available">Aggiornamento disponibile</string>
@@ -512,6 +524,7 @@
     <string name="modules_review_title">Eseguire questo comando?</string>
     <string name="modules_review_message">%1$s ha chiesto a Shizuku di eseguire:</string>
     <string name="modules_review_approve">Eseguilo</string>
+    <string name="modules_review_trust">Rendi %1$s attendibile e non chiedere più</string>
     <string name="modules_result_title">%1$s</string>
     <string name="modules_result_exit">Codice di uscita %1$d</string>
     <string name="modules_error_not_a_module">Quel file non è un modulo: il suo module.prop non è presente o non è utilizzabile.</string>
@@ -551,9 +564,26 @@
     <string name="start_system_custom_copied">Comando copiato negli appunti.</string>
     <string name="start_system_custom_copy_failed">Il comando è sopra, pronto da copiare a mano.</string>
     <string name="settings_section_startup">Avvio</string>
+    <string name="settings_section_startup_summary">Avvio, watchdog e metodo di avvio</string>
     <string name="settings_section_wireless">Debug wireless</string>
+    <string name="settings_section_wireless_summary">Debug wireless, modalità TCP e porta ADB</string>
     <string name="settings_section_tools">Strumenti</string>
+    <string name="settings_section_tools_summary">Autorizzazioni, configurazione, terminale e intent</string>
+    <string name="settings_backup_section">Backup e ripristino</string>
+    <string name="settings_backup_export">Esegui backup delle impostazioni</string>
+    <string name="settings_backup_export_summary">Salva le impostazioni dell\'app e gli elenchi di Lab in un file JSON.</string>
+    <string name="settings_backup_restore">Ripristina impostazioni</string>
+    <string name="settings_backup_restore_summary">Sostituisci le impostazioni dell\'app e gli elenchi di Lab con quelli di un file di backup.</string>
+    <string name="settings_backup_exported">%1$d impostazioni salvate.</string>
+    <string name="settings_backup_export_failed">Impossibile salvare il backup.</string>
+    <string name="settings_backup_unreadable">Questo file non è un backup delle impostazioni di Shizuku.</string>
+    <string name="settings_backup_restore_title">Ripristinare le impostazioni?</string>
+    <string name="settings_backup_restore_message">Questa operazione sostituisce %1$d impostazioni ed elenchi.</string>
+    <string name="settings_backup_restore_action">Ripristina</string>
+    <string name="settings_backup_restored">Ripristinate %1$d impostazioni. Riavvia Shizuku per applicare le modifiche all\'avvio.</string>
+    <string name="settings_backup_restore_failed">Impossibile ripristinare il backup.</string>
     <string name="settings_section_appearance">Aspetto</string>
+    <string name="settings_section_appearance_summary">Tema, colori e lingua</string>
     <string name="settings_section_about">Informazioni</string>
     <string name="settings_theme">Tema</string>
     <string name="settings_theme_system">Segui il sistema</string>
@@ -628,12 +658,17 @@
     <string name="settings_start_on_boot">Avvia all\'accensione</string>
     <string name="settings_use_system_color">Usa colore tema di sistema</string>
     <string name="settings_use_system_color_summary">Segui la palette di sistema</string>
+    <string name="settings_always_show_navigation_bar">Mostra sempre la barra di navigazione</string>
+    <string name="settings_always_show_navigation_bar_summary">Mantieni visibile la barra delle schede quando scorri verso il basso.</string>
+    <string name="settings_secure_quick_tiles">Proteggi i riquadri rapidi</string>
+    <string name="settings_secure_quick_tiles_summary">Blocca le modifiche ai riquadri rapidi quando il telefono è bloccato.</string>
     <string name="settings_watchdog">Watchdog</string>
     <string name="settings_watchdog_summary">Riavvia Shizuku automaticamente se si arresta in modo anomalo</string>
     <string name="settings_auto_disable_wireless_debugging">Disabilita debug wireless</string>
     <string name="settings_auto_disable_wireless_debugging_summary">Spegni il debug wireless quando Shizuku si arresta.</string>
     <string name="settings_start_method">Metodo di avvio predefinito</string>
     <string name="settings_start_method_root_unavailable">Questo dispositivo non ha accesso root, quindi gli avvii ricorrono al debug wireless.</string>
+    <string name="settings_start_method_root_unavailable_usb">Questo dispositivo non ha accesso root, quindi gli avvii ricorrono alla USB.</string>
     <string name="start_method_wireless_no_network">Senza Wi-Fi</string>
     <string name="start_method_wireless">Wireless</string>
     <string name="start_method_usb">USB</string>
@@ -704,6 +739,31 @@
     <string name="permissions_accessibility">Servizio di accessibilità</string>
     <string name="permissions_accessibility_summary">Legge automaticamente il codice di accoppiamento.</string>
     <string name="permissions_battery_summary">Impedisce ad Android di chiudere Shizuku in background.</string>
+    <string name="permissions_pairing_service">Servizio di accoppiamento</string>
+    <string name="permissions_pairing_service_reason">Legge il codice di accoppiamento.</string>
+    <string name="permissions_pairing_service_restricted">Consenti le impostazioni limitate nelle informazioni dell\'app.</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
+    <string name="setup_step">Passo %1$d di %2$d</string>
+    <string name="setup_action_skip">Salta</string>
+    <string name="setup_action_continue">Continua</string>
+    <string name="setup_action_done">Fatto</string>
+    <string name="setup_welcome_title">Benvenuto su Shizuku-Next</string>
+    <string name="setup_welcome_body">Shizuku-Next avvia e gestisce il servizio Shizuku, che consente alle applicazioni di utilizzare i permessi che normalmente necessitano di adb o root. Può essere modificato tutto in seguito nelle Impostazioni.</string>
+    <string name="setup_start_title">Come dovrebbe avviarsi Shizuku?</string>
+    <string name="setup_start_body">Determina dove il servizio ottiene le proprie autorizzazioni. Potrai modificarlo in seguito nelle Impostazioni, sotto Metodo di avvio.</string>
+    <string name="setup_root_title">Root</string>
+    <string name="setup_root_body">Un tocco, nessun cavo e accoppiamento. Richiede un gestore di root che conceda l\'accesso a Shizuku.</string>
+    <string name="setup_wireless_title">Debug wireless</string>
+    <string name="setup_wireless_body">Funziona senza root. Richiede le Opzioni sviluppatore e un accoppiamento una tantum; successivamente si avvia dall\'app.</string>
+    <string name="setup_usb_title">Debug USB</string>
+    <string name="setup_usb_body">Funziona senza root. Richiede la porta ADB classica; se non è aperta, collega il dispositivo a un computer una volta per avviare Shizuku.</string>
+    <string name="setup_permissions_title">Autorizzazioni facoltative</string>
+    <string name="setup_permissions_body">È possibile saltare qualsiasi di queste autorizzazioni e modificarle successivamente nelle Impostazioni.</string>
+    <string name="settings_run_setup">Esegui di nuovo la configurazione</string>
+    <string name="settings_run_setup_summary">Configurazione iniziale: come si avvia Shizuku e di cosa ha bisogno</string>
     <string name="settings_help">Aiuto</string>
     <string name="settings_translate">Partecipa alla traduzione</string>
     <string name="settings_translate_note">Traduci l\'app su Crowdin.</string>
@@ -907,6 +967,7 @@
     <string name="off">Disattivo</string>
     <string name="dialog_cannot_open_browser_title">Impossibile avviare il browser</string>
     <string name="toast_copied_to_clipboard">Copiato negli appunti</string>
+    <string name="toast_press_back_again">Premi di nuovo indietro per uscire</string>
     <string name="accessibility_service_description">Accoppia il debug wireless senza dover digitare il codice.\n\nShizuku legge il codice di accoppiamento e la porta dalla schermata di sistema “Accoppia con dispositivo”, esegue l\'accoppiamento e si avvia da solo. Sulle TV (ad esempio con Android 14 o versioni successive) gestisce l\'intera procedura e si disattiva una volta trovato il codice.</string>
     <!-- Messages for legacy -->
     <string name="dialog_legacy_not_support_title">%1$s non supporta il moderno Shizuku</string>
@@ -1005,6 +1066,25 @@
     <string name="app_action_uninstall_note">Rimuove le app ma conserva i suoi dati.</string>
     <string name="app_action_restore">Ripristina app di sistema</string>
     <string name="app_action_restore_note">Ripristina per questo utente un\'app di sistema rimossa.</string>
+    <string name="app_section_data">Dati dell\'app</string>
+    <string name="app_data_note">Esporta OBB e Android/data. I dati interni dell\'app richiedono l\'accesso root e non sono inclusi.</string>
+    <string name="app_data_needs_shizuku">Avvia Shizuku per esportare o importare i dati dell\'app.</string>
+    <string name="app_data_export">Esporta dati dell\'app</string>
+    <string name="app_data_export_note">Interrompe l\'esecuzione dell\'app e salva OBB e dati esterni in un file ZIP.</string>
+    <string name="app_data_import">Importa dati dell\'app</string>
+    <string name="app_data_import_note">Interrompe l\'esecuzione dell\'app e sostituisce OBB e dati esterni da un file ZIP.</string>
+    <string name="app_data_none">Questa app non ha OBB o dati esterni da esportare.</string>
+    <string name="app_data_exporting">Esportazione dati dell\'app</string>
+    <string name="app_data_importing">Importazione dati dell\'app</string>
+    <string name="app_data_preparing">Preparazione...</string>
+    <string name="app_data_exported">Dati dell\'app esportati.</string>
+    <string name="app_data_imported">Dati dell\'app importati. Avvia l\'app per utilizzarla.</string>
+    <string name="app_data_export_failed">Impossibile esportare i dati dell\'app: %1$s</string>
+    <string name="app_data_import_failed">Impossibile importare i dati dell\'app: %1$s</string>
+    <string name="app_data_cancelled">Annullato.</string>
+    <string name="app_data_import_title">Importare i dati dell\'app?</string>
+    <string name="app_data_import_message">Sostituire OBB e dati esterni di %1$s con quelli di questo archivio? Le sezioni assenti dall\'archivio non vengono modificate.</string>
+    <string name="app_data_import_action">Importa</string>
     <string name="app_confirm_title">Sei sicuro?</string>
     <string name="app_confirm_disable">Disattivare %1$s? Rimarrà così finché non lo riattivi.</string>
     <string name="app_confirm_clear_data">Eliminare tutti i dati per %1$s? Questa operazione non può essere annullata.</string>
@@ -1064,6 +1144,7 @@
     <string name="lab_switch_is_on">%1$s attivo</string>
     <string name="lab_switch_is_off">%1$s disattivato</string>
     <string name="lab_switch_could_not_change">%1$s non può essere modificato</string>
+    <string name="lab_switch_locked">Sblocca il telefono per modificare questo riquadro.</string>
     <string name="app_info_version">Versione</string>
     <string name="app_info_uid">UID</string>
     <string name="app_info_target_sdk">SDK target</string>
@@ -1080,6 +1161,19 @@
     <string name="app_info_yes">Sì</string>
     <string name="app_info_no">No</string>
     <string name="tab_wifi_passwords">Password Wi-Fi</string>
+    <string name="tab_accessibility">Accessibilità</string>
+    <string name="accessibility_boot">Avvia all\'accensione</string>
+    <string name="accessibility_boot_summary">Avvia di nuovo il keep-alive dopo un riavvio.</string>
+    <string name="accessibility_empty">Nessun servizio di accessibilità trovato.</string>
+    <string name="accessibility_gate_off">Keep-alive disattivato</string>
+    <string name="accessibility_count">%1$d attivi</string>
+    <string name="accessibility_filter_off">Disattivo</string>
+    <string name="accessibility_filter_on">Attivo</string>
+    <string name="accessibility_no_match">Nessun servizio corrisponde alla ricerca.</string>
+    <string name="accessibility_write_failed">Impossibile cambiare il servizio. Verifica che Shizuku sia in esecuzione.</string>
+    <string name="accessibility_notification_channel">Servizi di accessibilità</string>
+    <string name="accessibility_notification_title">Servizi di accessibilità mantenuti attivi</string>
+    <string name="accessibility_notification_text">Shizuku-Next riattiva i servizi bloccati quando Android li disattiva.</string>
     <string name="wifi_passwords_show">Mostra password</string>
     <string name="wifi_passwords_hide">Nascondi password</string>
     <string name="wifi_passwords_copy">Copia password</string>
@@ -1164,6 +1258,8 @@
     <string name="install_action">Installa</string>
     <string name="install_running">Installazione di\u2026</string>
     <string name="install_done">Installata.</string>
+    <string name="install_open">Apri app</string>
+    <string name="install_open_failed">Impossibile aprire l\'app.</string>
     <string name="install_options_heading">Opzioni di installazione</string>
     <string name="install_instant">Installa come app istantanea</string>
     <string name="install_instant_desc">Viene eseguita senza installare l\'app completa né aggiungerla al launcher.</string>
@@ -1217,4 +1313,10 @@
     <string name="install_location_shared">Memoria condivisa</string>
     <string name="install_spoof_source">Falsifica origine di installazione</string>
     <string name="install_spoof_source_desc">Il pacchetto che Android indica come installatore di questa app.</string>
+    <string name="install_source_presets">Origini di installazione comuni</string>
+    <string name="install_source_none">Nessuno spoofing</string>
+    <string name="install_source_play_store">Google Play Store</string>
+    <string name="install_source_shell">Shell</string>
+    <string name="install_source_google_package_installer">Installatore pacchetti Google</string>
+    <string name="install_source_aosp_package_installer">Installatore pacchetti AOSP</string>
 </resources>

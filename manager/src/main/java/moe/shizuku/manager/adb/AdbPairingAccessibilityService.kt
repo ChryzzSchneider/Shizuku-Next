@@ -23,21 +23,26 @@ import moe.shizuku.manager.ShizukuSettings
 import moe.shizuku.manager.receiver.ShizukuReceiverStarter
 import moe.shizuku.manager.start.StartFailureKind
 import moe.shizuku.manager.start.StartStatusReporter
+import moe.shizuku.manager.utils.Diag
 import moe.shizuku.manager.utils.EnvironmentUtils
 import java.net.ConnectException
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Pairs wireless debugging without any typing, by reading the code straight out of
+ * Pairs wireless debugging without any taps or typing, by reading the code straight out of
  * the system's "Pair with device" dialog.
  *
- * On phones the user still opens the dialog (Developer options → Wireless debugging
- * → "Pair device with pairing code"); this service picks up the code and port from
- * it, pairs, and starts Shizuku. That removes both the typing and the race against
- * the pairing dialog's short lifetime, which is what makes the notification flow
- * fail when the code is entered too late.
+ * On phones the app opens Developer options with the Wireless debugging row highlighted;
+ * this service takes the two taps from there (the service, then "Pair device with pairing
+ * code"), reads the code and port out of the dialog, pairs, and starts Shizuku. That removes
+ * the taps, the typing, and the race against the pairing dialog's short lifetime, which is
+ * what makes the notification flow fail when the code is entered too late.
  *
- * On TV the dialog cannot be driven by hand, so the service brings the app up and
- * drives the whole flow itself, then switches off again.
+ * On TV the user walks to the dialog with the remote and the service only reads it. When the
+ * service was switched on from the accessibility list, it brings the app back up so the user
+ * can carry on from the pairing dialog; when the app switched it on and opened Developer options
+ * itself, it stays out of the way, because bringing the app up then covered the very screen the
+ * user was about to use (which is what made it look broken on the Google TV Streamer).
  *
  * What it may look at is the settings app that hosts that dialog and nothing else: declared in
  * the service configuration, and applied again to the windows this walks, because an
@@ -57,39 +62,78 @@ class AdbPairingAccessibilityService : AccessibilityService() {
 
     private var pairing = false
 
+    /** True once a pair succeeded: the dialog can stay open, but it must not be read again. */
+    private var paired = false
+
     /** Last code we attempted, so dialog refreshes don't retry the code we failed on. */
     private var lastAttempt: String? = null
 
     /** How many reads are left in the burst that follows a touch on Settings. */
     private var readsLeft = 0
 
+    /** How many times the two Settings rows are looked for before leaving it to the user. */
+    private var driveAttempts = 0
+
+    /** True once the pairing row was clicked, so the service does not keep tapping Settings. */
+    private var driveDone = false
+
+    private var lastDriveTarget: String? = null
+    private var lastDriveAt = 0L
+
     /** Only TV needs driving; elsewhere the user drives the dialog themselves. */
     private val isTelevision
         get() = EnvironmentUtils.isTelevision() && EnvironmentUtils.isTlsSupported()
 
+    /**
+     * Called when Android binds the service.
+     *
+     * On TV the app may have just enabled the service and opened Developer options. The
+     * one-shot mark keeps this connection from covering that screen; otherwise the pairing
+     * dialog is brought up and the longer remote timeout starts.
+     */
     override fun onServiceConnected() {
         super.onServiceConnected()
 
-        if (!isTelevision) return
+        paired = false
+        driveDone = false
+        driveAttempts = 0
+        lastDriveTarget = null
 
-        val intent = Intent(this, MainActivity::class.java).apply {
-            addFlags(
-                Intent.FLAG_ACTIVITY_NEW_TASK or
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                    Intent.FLAG_ACTIVITY_SINGLE_TOP
-            )
-            putExtra(AppConstants.EXTRA_SHOW_PAIRING_DIALOG, true)
+        Diag.info(TAG, "Connected, television: $isTelevision")
+
+        if (isTelevision) {
+            // The app enabled the service and opened Developer options. Consume the mark on
+            // this connection so a slow connect still leaves that screen in front; once
+            // consumed, a later manual re-enable gets the usual MainActivity launch.
+            val appEnabledIt = serviceEnabledByApp.getAndSet(false)
+            if (!appEnabledIt) {
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    )
+                    putExtra(AppConstants.EXTRA_SHOW_PAIRING_DIALOG, true)
+                }
+                runCatching { startActivity(intent) }
+                    .onFailure { Diag.warn(TAG, "Could not bring Shizuku up", it) }
+            }
+
+            // Getting to the dialog with a remote takes longer than a tap or two on a phone.
+            handler.postDelayed({
+                toast(getString(R.string.toast_pairing_timeout))
+                disableSelf()
+            }, TV_TIMEOUT_MS)
+            return
         }
-        runCatching { startActivity(intent) }
 
-        handler.postDelayed({
-            toast(getString(R.string.toast_pairing_timeout))
-            disableSelf()
-        }, 60_000)
+        // On a phone the app has just opened Developer options with the Wireless debugging
+        // row highlighted. Take the two taps from there; the reader below handles the dialog.
+        handler.postDelayed(driveAgain, DRIVE_INITIAL_DELAY_MS)
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (pairing || event == null) return
+        if (pairing || paired || event == null) return
 
         // The pairing dialog is always hosted by the settings app. Ignore every other
         // window rather than reading content we have no reason to look at.
@@ -100,6 +144,12 @@ class AdbPairingAccessibilityService : AccessibilityService() {
         // moment later, with nothing left to say so, which is why the flow only worked after
         // something else was touched. So a touch on Settings starts a short burst of reads
         // instead, and it stops as soon as there is a code to act on.
+        // A screen change is also the cue to take the next tap of the automatic flow.
+        if (!isTelevision && !driveDone) {
+            handler.removeCallbacks(driveAgain)
+            handler.postDelayed(driveAgain, DRIVE_EVENT_DELAY_MS)
+        }
+
         handler.removeCallbacks(readAgain)
         readsLeft = READ_ATTEMPTS
         readAgain.run()
@@ -107,7 +157,7 @@ class AdbPairingAccessibilityService : AccessibilityService() {
 
     private val readAgain = object : Runnable {
         override fun run() {
-            if (pairing) return
+            if (pairing || paired) return
 
             val dialog = readPairingDialog()
             if (dialog != null) {
@@ -122,6 +172,82 @@ class AdbPairingAccessibilityService : AccessibilityService() {
 
             if (readsLeft-- > 0) handler.postDelayed(this, READ_INTERVAL_MS)
         }
+    }
+
+    /**
+     * Walks the two taps between Developer options and the pairing dialog.
+     *
+     * The user has already chosen automatic pairing; these are the taps that flow used to
+     * ask for. It only clicks a row whose text is one of the two it knows, and stops after
+     * the pairing row: from there the dialog reader above takes over.
+     */
+    private val driveAgain = object : Runnable {
+        override fun run() {
+            if (isTelevision || pairing || paired || driveDone) return
+
+            // If the dialog is already up, there is nothing to open.
+            if (readPairingDialog() != null) {
+                driveDone = true
+                return
+            }
+
+            val root = settingsRoot()
+            if (root != null) {
+                val pairRow = findText(root, PAIR_CODE_TEXT)
+                if (pairRow != null) {
+                    if (clickRow(pairRow, PAIR_CODE_TARGET)) {
+                        driveDone = true
+                        return
+                    }
+                } else {
+                    // Developer options. The title's clickable parent is the left side of
+                    // the row; the switch beside it is a sibling, so this opens the screen
+                    // rather than toggling wireless debugging.
+                    findText(root, WIRELESS_TEXT)?.let { clickRow(it, WIRELESS_TARGET) }
+                }
+            }
+
+            if (++driveAttempts < DRIVE_ATTEMPTS) {
+                handler.postDelayed(this, DRIVE_INTERVAL_MS)
+            }
+        }
+    }
+
+    private fun settingsRoot(): AccessibilityNodeInfo? {
+        val openWindows = runCatching { windows }.getOrNull().orEmpty()
+        for (window in openWindows) {
+            val root = window?.root ?: continue
+            if (hostsPairingDialog(root.packageName?.toString())) return root
+        }
+        return null
+    }
+
+    private fun findText(node: AccessibilityNodeInfo, text: String): AccessibilityNodeInfo? {
+        if (node.text?.toString() == text && node.isVisibleToUser) return node
+        for (index in 0 until node.childCount) {
+            val child = node.getChild(index) ?: continue
+            findText(child, text)?.let { return it }
+        }
+        return null
+    }
+
+    private fun clickRow(node: AccessibilityNodeInfo, target: String): Boolean {
+        val now = System.currentTimeMillis()
+        if (target == lastDriveTarget && now - lastDriveAt < CLICK_DEBOUNCE_MS) return false
+
+        var clickable: AccessibilityNodeInfo? = node
+        while (clickable != null && !clickable.isClickable) {
+            clickable = clickable.parent
+        }
+        val clicked = runCatching {
+            clickable?.performAction(AccessibilityNodeInfo.ACTION_CLICK) == true
+        }.getOrDefault(false)
+        if (clicked) {
+            lastDriveTarget = target
+            lastDriveAt = now
+            return true
+        }
+        return false
     }
 
     /**
@@ -282,8 +408,12 @@ class AdbPairingAccessibilityService : AccessibilityService() {
         // keeps the flag meaning what its name says.
         ShizukuReceiverStarter.start(this, reason = "pairing-accessibility")
 
+        paired = true
         pairing = false
-        if (isTelevision) disableSelf()
+        // Pairing is done. Staying enabled would keep reading and clicking Settings after
+        // the dialog has served its purpose; the app switches the service back on when a
+        // new pairing is asked for.
+        disableSelf()
     }
 
     private fun finish(message: String) {
@@ -300,7 +430,14 @@ class AdbPairingAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {}
 
+    /**
+     * Logs why the service is going away: this line means it was switched off, while a crash
+     * entry in the same log means the process died.
+     */
     override fun onUnbind(intent: Intent?): Boolean {
+        // Logged so the log can tell a service that was switched off (this line) from one whose
+        // process died (no line, and a crash entry instead).
+        Diag.info(TAG, "Unbound, paired: $paired")
         handler.removeCallbacksAndMessages(null)
         return super.onUnbind(intent)
     }
@@ -308,9 +445,47 @@ class AdbPairingAccessibilityService : AccessibilityService() {
     companion object {
         private const val TAG = "AdbPairingAccessibility"
 
+        /** How long a TV user has to reach the pairing dialog before the service gives up. */
+        private const val TV_TIMEOUT_MS = 3 * 60_000L
+
+        /**
+         * True when the app enabled the service itself and its first connection should leave
+         * Developer options in front.
+         *
+         * Consumed on connect, so it can neither expire while the system is still binding the
+         * service nor swallow a later manual re-enable.
+         */
+        private val serviceEnabledByApp = AtomicBoolean(false)
+
+        /**
+         * Called just before the app writes the enabled-services setting, so the connection
+         * that follows leaves the Developer options screen in front.
+         */
+        @JvmStatic
+        fun noteAppEnabledService() {
+            serviceEnabledByApp.set(true)
+        }
+
+        /** Clears a mark left behind when enabling the service did not stick. */
+        @JvmStatic
+        fun clearAppEnabledService() {
+            serviceEnabledByApp.set(false)
+        }
+
         /** How many times a touch on Settings is followed up, and how far apart. */
         private const val READ_ATTEMPTS = 15
         private const val READ_INTERVAL_MS = 400L
+
+        /** The two rows between Developer options and the dialog, and how often to look. */
+        private const val WIRELESS_TEXT = "Wireless debugging"
+        private const val PAIR_CODE_TEXT = "Pair device with pairing code"
+        private const val WIRELESS_TARGET = "wireless"
+        private const val PAIR_CODE_TARGET = "pairing-code"
+        private const val DRIVE_INITIAL_DELAY_MS = 800L
+        private const val DRIVE_INTERVAL_MS = 700L
+        private const val DRIVE_EVENT_DELAY_MS = 350L
+        private const val DRIVE_ATTEMPTS = 20
+        private const val CLICK_DEBOUNCE_MS = 1_500L
 
         /** Long enough for discovery to answer, short enough to report a failure. */
         private const val PAIRING_DISCOVERY_TIMEOUT_MS = 8_000L

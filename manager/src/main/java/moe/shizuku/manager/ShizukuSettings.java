@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.provider.Settings;
@@ -43,6 +44,11 @@ public class ShizukuSettings {
         public static final String KEY_NIGHT_MODE = "night_mode";
         public static final String KEY_BLACK_NIGHT_THEME = "black_night_theme";
         public static final String KEY_USE_SYSTEM_COLOR = "use_system_color";
+        /** Whether the floating navigation bar stays visible when a page scrolls. */
+        public static final String KEY_ALWAYS_SHOW_NAVIGATION_BAR = "always_show_navigation_bar";
+
+        /** Whether quick tiles refuse changes while the device is locked. */
+        public static final String KEY_SECURE_QUICK_TILES = "secure_quick_tiles";
         public static final String KEY_UPDATE_MODE = "update_mode";
         public static final String KEY_HELP = "help";
         public static final String KEY_REPORT_BUG = "report_bug";
@@ -65,6 +71,9 @@ public class ShizukuSettings {
 
         /** Whether the start and stop intents have to carry the auth token. */
         public static final String KEY_REQUIRE_INTENT_TOKEN = "require_intent_token";
+
+        /** Whether the guided first-run setup has been completed or skipped. */
+        public static final String KEY_SETUP_DONE = "setup_done";
     }
 
     public static class UpdateMode {
@@ -111,6 +120,40 @@ public class ShizukuSettings {
     }
 
     /**
+     * Whether the guided setup has already been seen, one way or the other.
+     *
+     * Skipping it counts as seen: a setup that comes back is a setup that nags. What skipping
+     * leaves undone still shows on the home screen, so nothing is lost by not asking again.
+     *
+     * Installs that predate the setup must not meet it on their first launch after updating,
+     * so the first read decides for them. A genuinely new install is the one where the package's
+     * update time still equals its install time: every update moves the former and leaves the
+     * latter alone.
+     */
+    public static boolean isSetupDone(Context context) {
+        SharedPreferences prefs = getPreferences();
+        if (prefs.contains(Keys.KEY_SETUP_DONE)) {
+            return prefs.getBoolean(Keys.KEY_SETUP_DONE, true);
+        }
+
+        boolean freshInstall = true;
+        try {
+            PackageInfo info = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            // A minute of slack, for a package manager that stamps the two fields in two calls.
+            freshInstall = info.lastUpdateTime - info.firstInstallTime < 60_000L;
+        } catch (PackageManager.NameNotFoundException ignored) {
+        }
+
+        prefs.edit().putBoolean(Keys.KEY_SETUP_DONE, !freshInstall).apply();
+        return !freshInstall;
+    }
+
+    public static void setSetupDone() {
+        getPreferences().edit().putBoolean(Keys.KEY_SETUP_DONE, true).apply();
+    }
+
+    /**
      * Which method a start uses. This is what the Start button, start on boot,
      * the watchdog and the start intents all follow, so "start" behaves the same
      * everywhere instead of guessing from whichever method happened to work last.
@@ -144,7 +187,18 @@ public class ShizukuSettings {
     public static int getStartMethod() {
         SharedPreferences prefs = getPreferences();
         if (prefs.contains(Keys.KEY_START_METHOD)) {
-            return prefs.getInt(Keys.KEY_START_METHOD, StartMethod.WIRELESS);
+            int method = prefs.getInt(Keys.KEY_START_METHOD, StartMethod.WIRELESS);
+            // Wireless debugging is Android 11 and newer. A setting carried over from a newer
+            // device, or stored before this check existed, would otherwise send every start to
+            // a method this Android version cannot run. Android never becomes older, so the
+            // stored choice can be moved to USB for good.
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R
+                    && (method == StartMethod.WIRELESS
+                    || method == StartMethod.WIRELESS_NO_NETWORK)) {
+                method = StartMethod.USB;
+                prefs.edit().putInt(Keys.KEY_START_METHOD, method).apply();
+            }
+            return method;
         }
 
         // Nothing chosen yet, on a phone that has just been set up: follow how the server was
@@ -157,7 +211,9 @@ public class ShizukuSettings {
         // watchdog kept starting over wireless. Frozen, the choice survives what a start does.
         @StartMethod int method = getLastLaunchMode() == LaunchMethod.ROOT
                 ? StartMethod.ROOT
-                : StartMethod.WIRELESS;
+                : Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                ? StartMethod.WIRELESS
+                : StartMethod.USB;
         prefs.edit().putInt(Keys.KEY_START_METHOD, method).apply();
         return method;
     }
@@ -528,6 +584,34 @@ public class ShizukuSettings {
             defValue = AppCompatDelegate.MODE_NIGHT_YES;
         }
         return getPreferences().getInt(Keys.KEY_NIGHT_MODE, defValue);
+    }
+
+    /**
+     * Whether the floating navigation bar stays visible while a page scrolls.
+     *
+     * Off by default: the bar is meant to stay out of the way of long lists.
+     */
+    public static boolean getAlwaysShowNavigationBar() {
+        return getPreferences().getBoolean(Keys.KEY_ALWAYS_SHOW_NAVIGATION_BAR, false);
+    }
+
+    public static void setAlwaysShowNavigationBar(boolean enable) {
+        getPreferences().edit().putBoolean(Keys.KEY_ALWAYS_SHOW_NAVIGATION_BAR, enable).apply();
+    }
+
+    /**
+     * Whether quick tiles refuse changes while the keyguard is up.
+     *
+     * Off by default, so an existing phone behaves the same after updating. The tiles still
+     * read and show their state while locked; only the change is held back until the phone is
+     * unlocked.
+     */
+    public static boolean getSecureQuickTiles() {
+        return getPreferences().getBoolean(Keys.KEY_SECURE_QUICK_TILES, false);
+    }
+
+    public static void setSecureQuickTiles(boolean enable) {
+        getPreferences().edit().putBoolean(Keys.KEY_SECURE_QUICK_TILES, enable).apply();
     }
 
     /**

@@ -44,6 +44,9 @@
          row means, and both ways to open it. The App info menu is the only one available on a
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
     <string name="dialog_adb_pairing_open_app_info">Info om app</string>
     <string name="dialog_adb_pairing_accessibility_navigate">Start paringen ved å utføre følgende
         trinn:\n– Naviger til «Utvikleralternativer»\n– Aktiver «USB-feilsøking» og «Trådløs
@@ -184,6 +187,8 @@
     <string name="activities_copy">Kopier</string>
     <string name="activities_edit_as_intent">Rediger som hensikten</string>
     <string name="activities_copied">Kopiert</string>
+    <string name="activities_apps_section">Apper</string>
+    <string name="activities_save">Lagre</string>
     <string name="tab_intent_builder">Intent bygger</string>
     <string name="intent_builder_note">Bygg og send en hensikt. Du kan angi handling, data, type, komponent, kategorier, stativer og flagg. Du kan også laste opp et mål fra en URI, slik som intent:#Intent;action=android.intent. ction.VIEW;data=https://example.com;end. Dette er formatet som brukes av AktivitetsLauncher og de fleste automatiseringsverktøy. Laster inn én fylling i feltene, slik at du kan sjekke og redigere den før du sender.</string>
     <string name="intent_uri">Intent URI</string>
@@ -408,6 +413,7 @@
     <string name="settings_section_startup">Startup</string>
     <string name="settings_section_wireless">Trådløs feilsøking</string>
     <string name="settings_section_tools">Verktøy</string>
+    <string name="settings_backup_restore_action">Gjenopprett</string>
     <string name="settings_section_appearance">Utseende</string>
     <string name="settings_section_about">Om</string>
     <string name="settings_theme">Tema</string>
@@ -553,6 +559,13 @@
     <string name="permissions_accessibility">Tilgjengelighetstjeneste</string>
     <string name="permissions_accessibility_summary">Leser tilkoblingskoden automatisk.</string>
     <string name="permissions_battery_summary">Stopper Android fra å drepe Shizuku i bakgrunnen.</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
+    <string name="setup_root_title">Rot</string>
+    <string name="setup_wireless_title">Trådløs feilsøking</string>
+    <string name="setup_usb_title">USB feilsøking</string>
     <string name="settings_help">Hjelp</string>
     <string name="settings_report_bug">Rapporter en feil</string>
     <!--
@@ -898,6 +911,10 @@
     <string name="app_info_launcher">Visning av Launcher</string>
     <string name="app_info_yes">Ja</string>
     <string name="app_info_no">Nei</string>
+    <string name="accessibility_boot">Start på oppstart</string>
+    <string name="accessibility_filter_off">Av</string>
+    <string name="accessibility_filter_on">På</string>
+    <string name="accessibility_notification_channel">Tilgjengelighetstjenester</string>
     <string name="wifi_passwords_connect">Nettverk</string>
     <string name="files_root_app_data">Data</string>
     <string name="files_root_system">Systemadministrasjon</string>
@@ -913,4 +930,5 @@
     <string name="install_details_target">Target SDK</string>
     <string name="install_details_installed">Installert</string>
     <string name="install_location_auto">Utvikleralternativer</string>
+    <string name="install_source_shell">Skall</string>
 </resources>

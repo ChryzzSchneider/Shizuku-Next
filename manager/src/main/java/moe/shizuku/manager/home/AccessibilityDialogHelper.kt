@@ -67,16 +67,17 @@ private fun Context.ensureAccessibilityService(): Boolean {
 private fun Context.showEnableDialog() {
     // The reason this dialog is here, then the whole of what the greyed-out row means and both
     // ways to open it: the App info menu on the phone, the command with a computer attached.
-    val message = pairingEnableMessage()
+    // A TV (the Google TV Streamer among them) has no "Allow restricted settings" entry in App
+    // info: TV Settings has no corner menu to put it in. Sending somebody there is a dead end, so
+    // on a TV the button is left out and the message names the computer-side ways instead.
+    val television = EnvironmentUtils.isTelevision()
+    val message = pairingEnableMessage(television)
 
-    MaterialAlertDialogBuilder(this)
+    val builder = MaterialAlertDialogBuilder(this)
         .setTitle(R.string.dialog_adb_pairing_title)
         .setMessage(message)
         .setPositiveButton(R.string.enable) { _, _ ->
             SettingsPage.Accessibility.launch(this)
-        }
-        .setNeutralButton(R.string.dialog_adb_pairing_open_app_info) { _, _ ->
-            SettingsPage.ApplicationDetails.launch(this)
         }
         // The way out that needs none of this: type the code yourself.
         .setNegativeButton(R.string.auto_pair_manual) { _, _ ->
@@ -84,7 +85,12 @@ private fun Context.showEnableDialog() {
                 startActivity(Intent(this, AdbPairingTutorialActivity::class.java))
             }
         }
-        .show()
+    if (!television) {
+        builder.setNeutralButton(R.string.dialog_adb_pairing_open_app_info) { _, _ ->
+            SettingsPage.ApplicationDetails.launch(this)
+        }
+    }
+    builder.show()
 }
 
 /**
@@ -94,18 +100,22 @@ private fun Context.showEnableDialog() {
  * the whole message as one template and throws for a placeholder a translation carries over from
  * a string it no longer belongs to, and a dialog is a poor place to crash.
  */
-private fun Context.pairingEnableMessage(): CharSequence {
+private fun Context.pairingEnableMessage(television: Boolean): CharSequence {
     val command = "adb shell cmd appops set $packageName ACCESS_RESTRICTED_SETTINGS allow"
     val text = buildString {
         // The package as it is installed now, not the one it was built as: a hidden copy is
         // told to grant a name that is not installed otherwise, and the command fails.
         append(getString(R.string.dialog_adb_pairing_accessibility_enable, packageName))
         append("\n\n")
-        append(
-            getString(R.string.dialog_adb_pairing_accessibility_permission)
-                .replace("^1", "ACCESS_RESTRICTED_SETTINGS")
-                .replace("^2", command),
-        )
+        if (television) {
+            append(getString(R.string.dialog_adb_pairing_accessibility_permission_tv).replace("^1", command))
+        } else {
+            append(
+                getString(R.string.dialog_adb_pairing_accessibility_permission)
+                    .replace("^1", "ACCESS_RESTRICTED_SETTINGS")
+                    .replace("^2", command),
+            )
+        }
     }
 
     return SpannableString(text).apply {
@@ -121,6 +131,10 @@ private fun Context.pairingEnableMessage(): CharSequence {
     }
 }
 
+/**
+ * Explains the automated flow and opens Developer options once the accessibility service is
+ * ready. The manual path stays one tap away.
+ */
 private fun Context.showNavigateDialog() {
     val isTelevision = EnvironmentUtils.isTelevision() && EnvironmentUtils.isTlsSupported()
 
@@ -175,6 +189,12 @@ private fun Context.getEnabledAccessibilityServices(): List<String>? {
     return enabledServices?.split(":")
 }
 
+/**
+ * Writes the pairing service into the enabled-services setting.
+ *
+ * The app marks the connection before the write, so the service leaves Developer options in
+ * front, and clears the mark if the write did not take.
+ */
 private fun Context.enableAccessibilityService(): Boolean {
     if (isAccessibilityEnabled()) return true
 
@@ -187,11 +207,16 @@ private fun Context.enableAccessibilityService(): Boolean {
             enabledServices.joinToString(":") + ":$accessibilityServiceName"
         }
 
+    // This app is enabling the service, so the connection that follows belongs to this
+    // flow. Leave Developer options in front instead of pulling Shizuku back over it.
+    AdbPairingAccessibilityService.noteAppEnabledService()
     Settings.Secure.putString(
         contentResolver,
         Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
         newServices,
     )
 
-    return isAccessibilityEnabled()
+    return isAccessibilityEnabled().also { enabled ->
+        if (!enabled) AdbPairingAccessibilityService.clearAppEnabledService()
+    }
 }

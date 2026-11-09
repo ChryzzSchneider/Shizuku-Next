@@ -65,6 +65,9 @@
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
     <string name="dialog_adb_pairing_accessibility_permission">Android, uygulama mağazası dışından yüklenen uygulamalar için bu ayarı engeller. Erişilebilirlik hizmetini etkinleştirmek için ^1 uygulama iznine izin verin. Erişilebilirlik listesi bunu \"Kısıtlanmış ayar tarafından kontrol ediliyor\" şeklinde gösterir.\n\nUygulama Bilgisini açın ve menüden \"Kısıtlanmış ayarlara izin ver\" seçeneğini seçin, veya bir bilgisayarda şunu çalıştırın:\n\n^2\n\nHer iki seçenek de iş görür. Bu işlemden sonra anahtar çalışacaktır.</string>
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
     <string name="dialog_adb_pairing_open_app_info">Uygulama bilgileri</string>
     <string name="dialog_adb_pairing_accessibility_enable">Otomatik eşleştirme, kodu Shizuku\'nun erişilebilirlik hizmeti aracılığıyla sistem diyalog penceresinden okur; bu nedenle etkinleştirilmesi gerekir ve yalnızca gerektiği süre boyunca çalışır: kod bulunduğunda veya güç tasarrufu için bir dakika sonra hizmet kendiliğinden kapanır. Shizuku bunu normalde kendi kendine etkinleştirir ve bu da temiz bir kurulumda henüz verilmemiş olan WRITE_SECURE_SETTINGS iznini gerektirir.\n\nSonraki ekranda etkinleştirin, Manual altında kodu kendiniz yazın veya izni bir kez verin:\n\nadb shell pm grant %1$s android.permission.WRITE_SECURE_SETTINGS</string>
     <string name="dialog_adb_pairing_accessibility_navigate">Lütfen aşağıdaki adımları uygulayarak
@@ -258,6 +261,11 @@
     <string name="activities_copy">Kopyala</string>
     <string name="activities_edit_as_intent">İstek olarak düzenle</string>
     <string name="activities_copied">Kopyalandı</string>
+    <string name="activities_saved">Kaydedilen etkinlikler</string>
+    <string name="activities_apps_section">Uygulamalar</string>
+    <string name="activities_save">Kaydet</string>
+    <string name="activities_unsave">Kaydedilenlerden kaldır</string>
+    <string name="activities_gone">Bu etkinlik artık yüklü değil.</string>
     <string name="tab_intent_builder">Intent oluşturucu</string>
     <string name="intent_builder_note">Bir intent oluşturup gönderin. Eylem, veri, tür, bileşen, kategoriler, ek veriler ve bayrakları ayarlayabilirsiniz. Ayrıca \"intent:#Intent;action=android.intent.action.VIEW;data=https://example.com;end\" gibi bir URI\'den intent yükleyebilirsiniz. Bu, Activity Launcher ve çoğu otomasyon aracının kullandığı formattır. Bir intent yüklemek, göndermeden önce alanları kontrol edip düzenleyebilmeniz için alanları otomatik olarak doldurur.</string>
     <string name="intent_uri">İstek URI\'si</string>
@@ -573,6 +581,7 @@
     <string name="settings_section_startup">Başlatma</string>
     <string name="settings_section_wireless">Kablosuz hata ayıklama</string>
     <string name="settings_section_tools">Araçlar</string>
+    <string name="settings_backup_restore_action">Geri yükle</string>
     <string name="settings_section_appearance">Görünüm</string>
     <string name="settings_section_about">Hakkında</string>
     <string name="settings_theme">Tema</string>
@@ -731,6 +740,14 @@
     <string name="permissions_accessibility">Erişilebilirlik hizmeti</string>
     <string name="permissions_accessibility_summary">Eşleştirme kodunu otomatik olarak okur.</string>
     <string name="permissions_battery_summary">Android\'in Shizuku\'yu arka planda sonlandırmasını engeller.</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
+    <string name="setup_action_continue">Devam</string>
+    <string name="setup_root_title">Root</string>
+    <string name="setup_wireless_title">Kablosuz hata ayıklama</string>
+    <string name="setup_usb_title">USB hata ayıklama</string>
     <string name="settings_help">Yardım</string>
     <string name="settings_translate">Çeviriye katkıda bulun</string>
     <string name="settings_translate_note">Crowdin\'de uygulamayı çevirin.</string>
@@ -1115,6 +1132,10 @@
     <string name="app_info_yes">Evet</string>
     <string name="app_info_no">Hayır</string>
     <string name="tab_wifi_passwords">Wi-Fi şifreleri</string>
+    <string name="accessibility_boot">Önyüklemede başla</string>
+    <string name="accessibility_filter_off">Kapalı</string>
+    <string name="accessibility_filter_on">Açık</string>
+    <string name="accessibility_notification_channel">Erişilebilirlik hizmetleri</string>
     <string name="wifi_passwords_show">Şifreyi göster</string>
     <string name="wifi_passwords_hide">Şifreyi gizle</string>
     <string name="wifi_passwords_copy">Şifreyi kopyala</string>
@@ -1252,4 +1273,5 @@
     <string name="install_location_shared">Paylaşılan depolama</string>
     <string name="install_spoof_source">Yükleme kaynağını taklit et</string>
     <string name="install_spoof_source_desc">Android\'e bu uygulamayı yüklediği söylenen paket.</string>
+    <string name="install_source_shell">Kabuk</string>
 </resources>

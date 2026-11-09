@@ -16,6 +16,7 @@
     <string name="home_wireless_adb_title"><![CDATA[Start via Wireless debugging]]></string>
     <string name="home_wireless_adb_starting_without_wifi">Starting with no network: the device is asked for wireless debugging over and over until it stays on. This can take up to two minutes before it starts or gives up.</string>
     <string name="home_usb_adb_needs_network">A USB start uses the classic ADB port, and reopening it needs a network. Connect to Wi-Fi once, or choose <b>Start without Wi-Fi</b> as the start method and start over wireless debugging instead.</string>
+    <string name="home_usb_adb_needs_computer">A USB start needs the classic ADB port. On this Android version, connect to a computer and start Shizuku with the ADB command in Other methods.</string>
     <string name="home_wireless_adb_summary">Starts using wireless debugging.</string>
     <string name="home_usb_adb_title"><![CDATA[Start via USB debugging]]></string>
     <string name="home_usb_adb_summary">Starts using USB debugging.</string>
@@ -69,6 +70,10 @@
          phone with no computer attached, the app-ops command is the same app-op written from
          outside the app, and both are named because either reader may be the one holding it. -->
     <string name="dialog_adb_pairing_accessibility_permission">Android blocks this switch for apps installed outside an app store. Allow the ^1 app-op to turn on the accessibility service. The accessibility list shows this as \"Controlled by Restricted Setting\".\n\nOpen App info and select \"Allow restricted settings\" from the menu, or run this on a computer:\n\n^2\n\nEither option works. The switch will work afterwards.</string>
+    <!-- The TV form of dialog_adb_pairing_accessibility_permission. TV Settings has no menu in
+         App info, so there is no "Allow restricted settings" to point at; ^1 is the app-ops
+         command. -->
+    <string name="dialog_adb_pairing_accessibility_permission_tv">Android blocks this switch for apps installed outside an app store, and on a TV, App info has no \"Allow restricted settings\" option to unblock it. A computer connected to this TV over ADB is needed once: either grant the permission above, which lets Shizuku turn the service on by itself, or unblock the switch with:\n\n^1</string>
     <string name="dialog_adb_pairing_open_app_info">App info</string>
     <string name="dialog_adb_pairing_accessibility_enable">Automatic pairing reads the code out of the system dialog through Shizuku\'s accessibility service, so it has to be enabled, and only for as long as it takes: the service turns itself off once the code is found, or after a minute to save power. Shizuku normally enables it on its own, and that needs the WRITE_SECURE_SETTINGS permission, which a fresh install has not been granted yet.\n\nEnable it on the next screen, type the code yourself under Manual, or grant the permission once:\n\nadb shell pm grant %1$s android.permission.WRITE_SECURE_SETTINGS</string>
     <string name="dialog_adb_pairing_accessibility_navigate">Please start pairing by performing the following steps:\n- Navigate to \"Developer Options\"\n- Enable \"USB debugging\" and \"Wireless debugging\"\n- Tap the left side of \"Wireless debugging\"\n- Tap \"Pair device with pairing code.\" Shizuku will automatically detect the pairing code.</string>
@@ -78,7 +83,7 @@
     <string name="adb_error_stop_tcp">Could not stop ADB over TCP</string>
     <string name="adb_pair_required">Pair the device first.</string>
     <string name="enable">Enable</string>
-    <string name="auto_pair_instructions">Pair without typing a code:\n\n1. Developer options → Wireless debugging\n2. Pair device with pairing code\n\nShizuku reads the code and port straight from that dialog and starts itself. Keep the dialog open until pairing finishes.</string>
+    <string name="auto_pair_instructions">Pair without typing a code:\n\n1. Tap Developer options below\n\nShizuku opens Wireless debugging and the pairing dialog itself, reads the code and port, and starts. Keep the dialog open until pairing finishes.</string>
     <string name="auto_pair_manual">Manual</string>
     <string name="development_settings">Automatic</string>
     <string name="notification_settings">Notification settings</string>
@@ -457,6 +462,8 @@
     <string name="status_value_none">-</string>
     <string name="status_running_short">Running</string>
     <string name="status_stopped_short">Stopped</string>
+    <string name="home_status_service_active">Shizuku service is active</string>
+    <string name="home_status_service_stopped">Shizuku service is not running</string>
     <string name="action_start">Start</string>
     <string name="tools_stealth">Stealth mode</string>
     <string name="tools_modules">Modules</string>
@@ -549,6 +556,7 @@
     <string name="modules_review_title">Run this command?</string>
     <string name="modules_review_message">%1$s asked Shizuku to run:</string>
     <string name="modules_review_approve">Run it</string>
+    <string name="modules_review_trust">Trust %1$s, and stop asking</string>
     <string name="modules_result_title">%1$s</string>
     <string name="modules_result_exit">Exit code %1$d</string>
     <string name="modules_error_not_a_module">That file is not a module: its module.prop is missing or unusable.</string>
@@ -588,9 +596,26 @@
     <string name="start_system_custom_copied">Command copied to the clipboard.</string>
     <string name="start_system_custom_copy_failed">The command is above, ready to copy by hand.</string>
     <string name="settings_section_startup">Startup</string>
+    <string name="settings_section_startup_summary">Boot start, watchdog and start method</string>
     <string name="settings_section_wireless">Wireless debugging</string>
+    <string name="settings_section_wireless_summary">Wireless debugging, TCP mode and the ADB port</string>
     <string name="settings_section_tools">Tools</string>
+    <string name="settings_section_tools_summary">Permissions, setup, backup, terminal and intents</string>
+    <string name="settings_backup_section">Backup and restore</string>
+    <string name="settings_backup_export">Back up settings</string>
+    <string name="settings_backup_export_summary">Save app settings and Labs lists to a JSON file.</string>
+    <string name="settings_backup_restore">Restore settings</string>
+    <string name="settings_backup_restore_summary">Replace app settings and Labs lists from a backup file.</string>
+    <string name="settings_backup_exported">Saved %1$d settings.</string>
+    <string name="settings_backup_export_failed">Could not save the backup.</string>
+    <string name="settings_backup_unreadable">That file is not a Shizuku settings backup.</string>
+    <string name="settings_backup_restore_title">Restore settings?</string>
+    <string name="settings_backup_restore_message">This replaces %1$d settings and lists.</string>
+    <string name="settings_backup_restore_action">Restore</string>
+    <string name="settings_backup_restored">Restored %1$d settings. Restart Shizuku to apply start changes.</string>
+    <string name="settings_backup_restore_failed">Could not restore the backup.</string>
     <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_appearance_summary">Theme, colors, language and navigation bar</string>
     <string name="settings_section_about">About</string>
     <string name="settings_theme">Theme</string>
     <string name="settings_theme_system">Follow System</string>
@@ -666,12 +691,17 @@
     <string name="settings_start_on_boot">Start on boot</string>
     <string name="settings_use_system_color">Use System theme color</string>
     <string name="settings_use_system_color_summary">Follow the system palette</string>
+    <string name="settings_always_show_navigation_bar">Always show navigation bar</string>
+    <string name="settings_always_show_navigation_bar_summary">Keep the tab bar visible when you scroll down.</string>
+    <string name="settings_secure_quick_tiles">Secure quick tiles</string>
+    <string name="settings_secure_quick_tiles_summary">Block quick tile changes while the phone is locked.</string>
     <string name="settings_watchdog">Watchdog</string>
     <string name="settings_watchdog_summary">Restart Shizuku automatically if it crashes</string>
     <string name="settings_auto_disable_wireless_debugging">Disable wireless debugging</string>
     <string name="settings_auto_disable_wireless_debugging_summary">Turn off wireless debugging when Shizuku stops.</string>
     <string name="settings_start_method">Default start method</string>
     <string name="settings_start_method_root_unavailable">This device has no root, so starts fall back to wireless debugging.</string>
+    <string name="settings_start_method_root_unavailable_usb">This device has no root, so starts fall back to USB.</string>
     <string name="start_method_wireless_no_network">Without Wi-Fi</string>
     <string name="start_method_wireless">Wireless</string>
     <string name="start_method_usb">USB</string>
@@ -742,6 +772,31 @@
     <string name="permissions_accessibility">Accessibility service</string>
     <string name="permissions_accessibility_summary">Reads the pairing code automatically.</string>
     <string name="permissions_battery_summary">Stops Android from killing Shizuku in the background.</string>
+    <string name="permissions_pairing_service">Pairing service</string>
+    <string name="permissions_pairing_service_reason">Reads the pairing code.</string>
+    <string name="permissions_pairing_service_restricted">Allow restricted settings in App info.</string>
+    <!--
+      The guided first run. Each page is one decision, and the sentences say what happens rather
+      than what the app is worth: the app is Shizuku-Next, the service it manages is Shizuku.
+    -->
+    <string name="setup_step">Step %1$d of %2$d</string>
+    <string name="setup_action_skip">Skip</string>
+    <string name="setup_action_continue">Continue</string>
+    <string name="setup_action_done">Done</string>
+    <string name="setup_welcome_title">Welcome to Shizuku-Next</string>
+    <string name="setup_welcome_body">Shizuku-Next starts and manages the Shizuku service, which lets apps use permissions that normally need adb or root. Everything here can be changed later in Settings.</string>
+    <string name="setup_start_title">How should Shizuku start?</string>
+    <string name="setup_start_body">This decides where the service gets its permissions. You can change it later in Settings, under Start method.</string>
+    <string name="setup_root_title">Root</string>
+    <string name="setup_root_body">One tap, no cable and no pairing. Needs a root manager that grants Shizuku access.</string>
+    <string name="setup_wireless_title">Wireless debugging</string>
+    <string name="setup_wireless_body">Works without root. Needs Developer options and a one-time pairing; after that it starts from the app.</string>
+    <string name="setup_usb_title">USB debugging</string>
+    <string name="setup_usb_body">Works without root. Needs the classic ADB port; if it is not open, connect to a computer once to start Shizuku.</string>
+    <string name="setup_permissions_title">Optional permissions</string>
+    <string name="setup_permissions_body">You can skip any of these and change them later in Settings.</string>
+    <string name="settings_run_setup">Run setup again</string>
+    <string name="settings_run_setup_summary">The welcome steps: how Shizuku starts and what it needs</string>
     <string name="settings_help">Help</string>
     <string name="settings_translate">Participate in translation</string>
     <string name="settings_translate_note">Translate the app on Crowdin.</string>
@@ -961,7 +1016,8 @@
     <string name="off">Off</string>
     <string name="dialog_cannot_open_browser_title">Can\'t start browser</string>
     <string name="toast_copied_to_clipboard">Copied to clipboard</string>
-    <string name="accessibility_service_description">Pairs wireless debugging without typing the code.\n\nShizuku reads the pairing code and port from the system\'s “Pair with device” screen, pairs, and starts itself. On TVs (e.g. Android 14+) it drives the whole flow and switches off once a code is found.</string>
+    <string name="toast_press_back_again">Press back again to exit</string>
+    <string name="accessibility_service_description">Pairs wireless debugging without taps or typing.\n\nShizuku opens the Wireless debugging screen, opens the system\'s “Pair with device” dialog, reads the pairing code and port, pairs, and starts itself. On TVs (e.g. Android 14+) it drives the whole flow and switches off once a code is found.</string>
 
     <!-- Messages for legacy -->
     <string name="dialog_legacy_not_support_title">%1$s does not support modern Shizuku</string>
@@ -1065,6 +1121,25 @@
     <string name="app_action_uninstall_note">Removes the app but keeps its data.</string>
     <string name="app_action_restore">Restore system app</string>
     <string name="app_action_restore_note">Restores a removed system app for this user.</string>
+    <string name="app_section_data">App data</string>
+    <string name="app_data_note">Exports OBB and Android/data. Internal app data needs root and is not included.</string>
+    <string name="app_data_needs_shizuku">Start Shizuku to export or import app data.</string>
+    <string name="app_data_export">Export app data</string>
+    <string name="app_data_export_note">Stops the app and saves OBB and external data to a ZIP file.</string>
+    <string name="app_data_import">Import app data</string>
+    <string name="app_data_import_note">Stops the app and replaces OBB and external data from a ZIP file.</string>
+    <string name="app_data_none">This app has no OBB or external data to export.</string>
+    <string name="app_data_exporting">Exporting app data</string>
+    <string name="app_data_importing">Importing app data</string>
+    <string name="app_data_preparing">Preparing...</string>
+    <string name="app_data_exported">Exported app data.</string>
+    <string name="app_data_imported">Imported app data. Start the app to use it.</string>
+    <string name="app_data_export_failed">Could not export app data: %1$s</string>
+    <string name="app_data_import_failed">Could not import app data: %1$s</string>
+    <string name="app_data_cancelled">Cancelled.</string>
+    <string name="app_data_import_title">Import app data?</string>
+    <string name="app_data_import_message">Replace the OBB and external data for %1$s from this archive? Sections missing from the archive are left alone.</string>
+    <string name="app_data_import_action">Import</string>
     <string name="app_confirm_title">Are you sure?</string>
     <string name="app_confirm_disable">Disable %1$s? It stops running until you enable it again.</string>
     <string name="app_confirm_clear_data">Delete all data for %1$s? This cannot be undone.</string>
@@ -1131,6 +1206,7 @@
     <string name="lab_switch_is_on">%1$s is on</string>
     <string name="lab_switch_is_off">%1$s is off</string>
     <string name="lab_switch_could_not_change">%1$s could not be changed</string>
+    <string name="lab_switch_locked">Unlock the phone to change this tile.</string>
 
     <string name="app_info_version">Version</string>
     <string name="app_info_uid">UID</string>
@@ -1149,6 +1225,20 @@
     <string name="app_info_no">No</string>
 
     <string name="tab_wifi_passwords">Wi-Fi passwords</string>
+
+    <string name="tab_accessibility">Accessibility</string>
+    <string name="accessibility_boot">Start on boot</string>
+    <string name="accessibility_boot_summary">Starts the keep-alive again after a restart.</string>
+    <string name="accessibility_empty">No accessibility services found.</string>
+    <string name="accessibility_gate_off">Keep-alive off</string>
+    <string name="accessibility_count">%1$d on</string>
+    <string name="accessibility_filter_off">Off</string>
+    <string name="accessibility_filter_on">On</string>
+    <string name="accessibility_no_match">No service matches your search.</string>
+    <string name="accessibility_write_failed">Could not change the service. Check that Shizuku is running.</string>
+    <string name="accessibility_notification_channel">Accessibility services</string>
+    <string name="accessibility_notification_title">Accessibility services kept on</string>
+    <string name="accessibility_notification_text">Shizuku-Next turns locked services back on when Android switches them off.</string>
     <string name="wifi_passwords_show">Show password</string>
     <string name="wifi_passwords_hide">Hide password</string>
     <string name="wifi_passwords_copy">Copy password</string>
@@ -1231,10 +1321,12 @@
 <string name="tab_install">App installer</string>
 <string name="install_no_file">No package chosen</string>
 <string name="install_choose">Choose</string>
-<string name="install_choose_hint">APK, APKS, or XAPK file</string>
+<string name="install_choose_hint">APK, APKS, APKM, or XAPK file</string>
 <string name="install_action">Install</string>
 <string name="install_running">Installing\u2026</string>
 <string name="install_done">Installed.</string>
+<string name="install_open">Open app</string>
+<string name="install_open_failed">Could not open the app.</string>
 
 <string name="install_options_heading">Install options</string>
 
@@ -1306,5 +1398,11 @@
 
 <string name="install_spoof_source">Spoof install source</string>
 <string name="install_spoof_source_desc">The package Android is told installed this app.</string>
+<string name="install_source_presets">Common install sources</string>
+<string name="install_source_none">No spoofing</string>
+<string name="install_source_play_store">Google Play Store</string>
+<string name="install_source_shell">Shell</string>
+<string name="install_source_google_package_installer">Google Package Installer</string>
+<string name="install_source_aosp_package_installer">AOSP Package Installer</string>
 
 </resources>
